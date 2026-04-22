@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+rcart-widget-goli/node_modules/
+
+# Build output
+dist/
+rcart-widget-goli/extensions/rcart-goli-ext/assets/rcart-widget.js
+rcart-widget-goli/extensions/rcart-goli-ext/assets/rcart-widget.css
+
+# Shopify CLI
+.shopify/
+rcart-widget-goli/.shopify/
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+
+# Editor
+.vscode/

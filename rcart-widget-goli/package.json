@@ -1,0 +1,25 @@
+{
+  "name": "rcart-widget-goli",
+  "version": "1.0.0",
+  "license": "UNLICENSED",
+  "scripts": {
+    "shopify": "shopify",
+    "build": "shopify app build",
+    "dev": "shopify app dev",
+    "info": "shopify app info",
+    "generate": "shopify app generate",
+    "deploy": "shopify app deploy",
+    "build:widget": "cd ../ && npm run build",
+    "copy:widget": "cp ../dist/assets/rcart-widget.js ./extensions/rcart-goli-ext/assets/rcart-widget.js && cp ../dist/assets/rcart-widget.css ./extensions/rcart-goli-ext/assets/rcart-widget.css",
+    "build:all": "npm run build:widget && npm run copy:widget && npm run build"
+  },
+  "dependencies": {},
+  "trustedDependencies": [
+    "@shopify/plugin-cloudflare"
+  ],
+  "author": "roberto_admin",
+  "private": true,
+  "workspaces": [
+    "extensions/*"
+  ]
+}

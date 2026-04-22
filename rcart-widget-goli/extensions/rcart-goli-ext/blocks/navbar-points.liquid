@@ -1,0 +1,52 @@
+<link rel="stylesheet" href="{{ 'rcart-widget.css' | asset_url }}">
+
+<div
+  id="rcart-points-badge"
+  class="rcart-points-badge"
+  data-partner-code="{{ block.settings.partner_code }}"
+  data-store-name="{{ block.settings.store_name | escape }}"
+  data-mode="points-badge"
+  {% if customer %}data-email="{{ customer.email | escape }}"{% endif %}
+></div>
+
+<script src="{{ 'rcart-widget.js' | asset_url }}" defer></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var el = document.getElementById('rcart-points-badge');
+    if (el && window.mountRcartPointsBadge) {
+      window.mountRcartPointsBadge(el);
+    } else if (el && window.mountRcartWidget) {
+      window.mountRcartWidget(el);
+    }
+  });
+  document.addEventListener('shopify:section:load', function(event) {
+    var section = event.target;
+    var el = section.querySelector('#rcart-points-badge');
+    if (el && window.mountRcartPointsBadge) {
+      window.mountRcartPointsBadge(el);
+    } else if (el && window.mountRcartWidget) {
+      window.mountRcartWidget(el);
+    }
+  });
+</script>
+
+{% schema %}
+{
+  "name": "Rcart Points Badge",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "partner_code",
+      "label": "Partner code",
+      "default": "goli"
+    },
+    {
+      "type": "text",
+      "id": "store_name",
+      "label": "Store name",
+      "default": "My Store"
+    }
+  ]
+}
+{% endschema %}

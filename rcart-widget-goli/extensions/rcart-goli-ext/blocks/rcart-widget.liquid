@@ -1,0 +1,46 @@
+<link rel="stylesheet" href="{{ 'rcart-widget.css' | asset_url }}">
+
+<div
+  id="rcart-widget-root"
+  data-partner-code="{{ block.settings.partner_code }}"
+  data-store-name="{{ block.settings.store_name | escape }}"
+  {% if customer %}data-email="{{ customer.email | escape }}"{% endif %}
+></div>
+
+<script src="{{ 'rcart-widget.js' | asset_url }}" defer></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var el = document.getElementById('rcart-widget-root');
+    if (el && window.mountRcartWidget) {
+      window.mountRcartWidget(el);
+    }
+  });
+  document.addEventListener('shopify:section:load', function(event) {
+    var section = event.target;
+    var el = section.querySelector('#rcart-widget-root');
+    if (el && window.mountRcartWidget) {
+      window.mountRcartWidget(el);
+    }
+  });
+</script>
+
+{% schema %}
+{
+  "name": "Rcart widget",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "partner_code",
+      "label": "Partner code",
+      "default": "goli"
+    },
+    {
+      "type": "text",
+      "id": "store_name",
+      "label": "Store name",
+      "default": "My Store"
+    }
+  ]
+}
+{% endschema %}
