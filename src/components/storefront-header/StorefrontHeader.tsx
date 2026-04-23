@@ -119,9 +119,9 @@ export function StorefrontHeader({
         <div className={styles.topBar}>
           <BrandBlock brandLabel={brandLabel} logo={logo} logoSrc={logoSrc} logoAlt={logoAlt} />
           <div className={styles.right}>
-            <button type="button" className={styles.rewards} onClick={onRewardsClick}>
+            {/* <button type="button" className={styles.rewards} onClick={onRewardsClick}>
               {rewardsLabel}
-            </button>
+            </button> */}
 
             {isLoggedIn ? (
               <>

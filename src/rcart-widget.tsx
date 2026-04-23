@@ -10,7 +10,6 @@ import {
 } from 'getjacked-components';
 import { StorefrontHeader } from './components/storefront-header';
 import { useRcartGameApi } from './use-rcart-game-api';
-import { generateDiscountCode } from './lib/generate-discount-code';
 
 export type RcartWidgetProps = {
   partnerCode: string;
