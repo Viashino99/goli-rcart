@@ -4,7 +4,6 @@ import {
   SectionGames,
   SectionGameHero,
   SectionSteps,
-  SectionPartneredGames,
   SectionTestimonials,
   SectionFaq,
 } from 'getjacked-components';
@@ -36,7 +35,6 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
 
   const brandLabel = storeName?.trim() ? storeName : '';
   const heroGame = games?.[0];
-  const gameList = games?.slice(1);
 
   const isLoggedIn = sessionUser?.email;
 
@@ -116,22 +114,6 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
             onCTAClick={gotoGamesPage}
             to="#games"
           />
-          <div id="rcart-widget-games" style={{ scrollMarginTop: '1rem' }}>
-            <SectionPartneredGames
-              partnerCode={partnerCode}
-              partnerName={storeName}
-              maxIncompleteOffers={partnerSettings.maxIncompleteOffers}       
-              bundleAmount={Number(partnerSettings.rewardGoal?.thresholdAmount ?? rewardAmount)}
-              rewardAmount={rewardAmount}
-              isLoggedIn={!!resolvedEmail}
-              activities={resolvedEmail ? activities : []}
-              partnerSettings={partnerSettings}
-              refetchOffers={refetch}    
-              onLogin={handleLogin}
-              onBrowse={gotoGamesPage}
-              to="#games"
-            />
-          </div>
           <SectionSteps
             partnerName={storeName}
             partnerCode={partnerCode}
@@ -183,7 +165,7 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
               // TODO: analytics — game_cta_click (source: hero)
               console.log("Game CTA Clicked!", selectedGame);
             }}
-            activities={activities}
+            activities={resolvedEmail ? activities : []}
             maxIncompleteOffers={partnerSettings?.maxIncompleteOffers || 5}
             refetchOffers={refetch}
           />
@@ -196,6 +178,7 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
               partnerSettings={partnerSettings}
               rewardAmount={Number(rewardAmount) || 0}
               bundleAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount) || 0}
+              isLoggedIn={!!resolvedEmail}
               onLogin={handleLogin}
               onStartGame={(selectedGame) => {
                 // User started an offer from the list / activities area (not necessarily the hero game).
@@ -217,7 +200,7 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
                 // TODO: analytics — games_tab_change
                 console.log("Games tab changed:", tab);
               }}
-              games={gameList}
+              games={games}
               activities={activities}
               loading={loading}
               error={error}
