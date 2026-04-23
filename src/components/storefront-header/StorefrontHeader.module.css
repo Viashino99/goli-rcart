@@ -1,0 +1,137 @@
+.shell {
+  background-color: #fff;
+  border-top: 1px solid #e5e5e5;
+  border-bottom: 1px solid #e5e5e5;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+.inner {
+  position: relative;
+  max-width: 1350px;
+  margin: 0 auto;
+  padding: 14px clamp(16px, 10vw, 48px);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+}
+
+.progressRewardContainer {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .inner {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 100px;
+  }
+
+  .topBar {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .progressRewardContainer {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: auto;
+    max-width: min(560px, 42vw);
+    pointer-events: auto;
+  }
+}
+
+.brandSlot {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.brandLogoImg {
+  display: block;
+  max-height: 32px;
+  width: auto;
+  max-width: min(200px, 40vw);
+  object-fit: contain;
+}
+
+.brand {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #000;
+  letter-spacing: -0.02em;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.rewards {
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 400;
+  color: #6b6b6b;
+  cursor: pointer;
+}
+
+.rewards:hover {
+  color: #000;
+}
+
+.cta {
+  padding: 10px 20px;
+  background-color: #000;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.875rem;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.cta:hover {
+  opacity: 0.92;
+}
+
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #000;
+}
+
+.iconBtn:hover {
+  opacity: 0.75;
+}
