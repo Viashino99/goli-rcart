@@ -26,7 +26,8 @@ export function mountRcartWidget(container: HTMLElement) {
   const partnerCode = dataset.partnerCode || '';
   const email = dataset.email || null;
   const storeName = dataset.storeName || '';
-  const apiUrl = dataset.apiUrl || '';
+  const defaultApiUrl = import.meta.env.VITE_WIDGET_API_URL || 'https://rcart-api.vercel.app';
+  const apiUrl = import.meta.env.DEV ? dataset.apiUrl || defaultApiUrl : defaultApiUrl;
   const shop = dataset.shop || '';
 
   const root = ReactDOM.createRoot(container);
