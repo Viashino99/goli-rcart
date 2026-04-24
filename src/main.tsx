@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { ThemeProvider } from 'getjacked-components';
 import 'getjacked-components/style.css';
 import { RcartWidget } from './rcart-widget';
+import TrackerProvider from './components/tracker/TrackerProvider';
 
 // Mount function so Shopify theme / app-extension script can call it explicitly.
 // It looks for a container element and reads data attributes as configuration.
@@ -19,7 +20,12 @@ export function mountRcartWidget(container: HTMLElement) {
   root.render(
     <React.StrictMode>
       <ThemeProvider defaultMode="system">
+<<<<<<< HEAD
         <RcartWidget partnerCode={partnerCode} email={email} storeName={storeName} apiUrl={apiUrl} shop={shop} />
+=======
+        <TrackerProvider />
+        <RcartWidget partnerCode={partnerCode} email={email} storeName={storeName} />
+>>>>>>> 092934b (add pixel events)
       </ThemeProvider>
     </React.StrictMode>
   );

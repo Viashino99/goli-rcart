@@ -9,6 +9,7 @@ import {
 } from 'getjacked-components';
 import { StorefrontHeader } from './components/storefront-header';
 import { useRcartGameApi } from './use-rcart-game-api';
+import * as pixel from "./lib/fbpixel";
 
 export type RcartWidgetProps = {
   partnerCode: string;
@@ -22,6 +23,9 @@ function isGamesHash(): boolean {
   if (typeof window === 'undefined') return false;
   return window.location.hash === '#games';
 }
+
+/** Survives StrictMode dev double-mount so `pageview` is not sent twice. */
+let initialWidgetPageviewSent = false;
 
 export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store', apiUrl = '', shop = '' }: RcartWidgetProps) {
   const [resolvedEmail, setResolvedEmail] = useState<string | null>(email);
@@ -42,6 +46,13 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
   const isLoggedIn = sessionUser?.email;
 
   useEffect(() => {
+    if (initialWidgetPageviewSent) return;
+    initialWidgetPageviewSent = true;
+    pixel.pageview();
+  }, []);
+
+  useEffect(() => {
+    
     const onHashChange = () => {
       setShowPage(isGamesHash() ? 'games' : 'landing');
     };
@@ -51,6 +62,10 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
 
   const gotoGamesPage = () => {
     //TODO: Add shopify logic to redirect to the games page
+    pixel.fbTracker("View Games", {
+      email: resolvedEmail,
+    });
+
     setShowPage('games');
     if (typeof window !== 'undefined' && window.location.hash !== '#games') {
       const { pathname, search } = window.location;
@@ -59,6 +74,7 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
   };
   const gotoLandingPage = () => {
     //TODO: Add shopify logic to redirect to the landing page
+ 
     setShowPage('landing');
     if (typeof window !== 'undefined' && window.location.hash === '#games') {
       const { pathname, search } = window.location;
@@ -67,6 +83,9 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
   };
   const handleLogin = (submittedEmail: string) => {
     // TODO: Add shopify login logic to login the user and then set the resolvedEmail
+    pixel.fbTracker("Complete Registration", {
+      email: submittedEmail,
+    });
     setResolvedEmail(submittedEmail);
     gotoGamesPage?.();
     callNotifyApi('welcome', 'Welcome', { emailOverride: submittedEmail });
@@ -202,6 +221,10 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
             onCtaClick={() => {
               // User clicked the game hero CTA
               //TODO: Add shopify tracking here and internal logic.
+              pixel.fbTracker("View Content", {
+                ...heroGame
+              });
+          
               console.log("Game Hero CTA Clicked!");
             }}
             bundleAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount) || 0}
@@ -245,6 +268,10 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
               onSelectedGame={(selectedGame) => {
                 // User highlighted or selected a game in the grid before starting.
                 // TODO: analytics — game_selected (source: games)
+                pixel.fbTracker("View Content", {
+                  ...selectedGame
+                });
+            
                 console.log("Selected Game!", selectedGame);
               }}
               onGameCTAClick={(selectedGame) => {
