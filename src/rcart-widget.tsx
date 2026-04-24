@@ -6,6 +6,8 @@ import {
   SectionSteps,
   SectionTestimonials,
   SectionFaq,
+  useLogout,
+  SectionPartneredGames
 } from 'getjacked-components';
 import { StorefrontHeader } from './components/storefront-header';
 import { useRcartGameApi } from './use-rcart-game-api';
@@ -31,6 +33,7 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
   const [discountCode, setDiscountCode] = useState<string | null>(null);
   const prevActivityCount = useRef<number>(0);
 
+  const { logout } = useLogout();
   const { games, activities, partnerSettings, rewardAmount, loading, error,sessionUser, refetch } = useRcartGameApi({
     partnerCode,
     email: resolvedEmail,
@@ -38,6 +41,7 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
 
   const brandLabel = storeName?.trim() ? storeName : '';
   const heroGame = games?.[0];
+  const gameList = games?.slice(1);
 
   const isLoggedIn = sessionUser?.email;
 
@@ -70,6 +74,13 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
     setResolvedEmail(submittedEmail);
     gotoGamesPage?.();
     callNotifyApi('welcome', 'Welcome', { emailOverride: submittedEmail });
+  };
+  const handleLogout = () => {
+    // Clears persisted session (email + userId) via getjacked-components; keeps widget email in sync.
+    // TODO: Add Shopify logout redirect / storefront session invalidation when integrated.
+    logout();
+    setResolvedEmail(null);
+    console.log("Logged out");
   };
 
   const callDiscountApi = async (amount: 5 | 100): Promise<string | null> => {
@@ -147,16 +158,14 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
         partnerCode={partnerCode}
         partnerName={storeName}
         brandLabel={brandLabel}
+        logoSrc='' //TODO: Add logo src
+        logoAlt={brandLabel} //TODO: Add logo alt
         isLoggedIn={!!isLoggedIn}
-        isLandingPage={showPage === 'landing'}
-        onRewardsClick={gotoLandingPage}
         onCtaClick={gotoGamesPage}
-        onCartClick={() => {
-          console.log('cart clicked');
-        }}
         rewardAmount={rewardAmount || 0}
         partnerSettings={partnerSettings}
         discountCode={discountCode || ""}
+        onLogout={handleLogout}
         onGenerateDiscountCode={handleGenerateDiscountCode}
         onClaimFirstMilestone={handleFirstMilestoneClaim}
         onClaimLastMilestone={handleLastMilestoneClaim}
@@ -171,6 +180,20 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
             onCTAClick={gotoGamesPage}
             to="#games"
           />
+          <SectionPartneredGames
+              partnerCode={partnerCode}
+              partnerName={storeName}
+              maxIncompleteOffers={partnerSettings.maxIncompleteOffers}       
+              bundleAmount={Number(partnerSettings.rewardGoal?.thresholdAmount ?? rewardAmount)}
+              rewardAmount={rewardAmount}
+              isLoggedIn={!!resolvedEmail}
+              activities={resolvedEmail ? activities : []}
+              partnerSettings={partnerSettings}
+              refetchOffers={refetch}    
+              onLogin={handleLogin}
+              onBrowse={gotoGamesPage}
+              to="#games"
+            />
           <SectionSteps
             partnerName={storeName}
             partnerCode={partnerCode}
@@ -183,15 +206,15 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
             onCTAClick={gotoGamesPage}
             to=""
           />
+          <SectionFaq
+            partnerCode={partnerCode}
+            partnerName={storeName}
+          />
 
           <SectionTestimonials
             partnerCode={partnerCode}
           />
 
-          <SectionFaq
-            partnerCode={partnerCode}
-            partnerName={storeName}
-          />
         </>
       ) : showPage === 'games' ? (
         <>
@@ -257,7 +280,7 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
                 // TODO: analytics — games_tab_change
                 console.log("Games tab changed:", tab);
               }}
-              games={games}
+              games={gameList}
               activities={activities}
               loading={loading}
               error={error}
