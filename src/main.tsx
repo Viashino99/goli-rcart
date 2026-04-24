@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { ThemeProvider } from 'getjacked-components';
 import 'getjacked-components/style.css';
 import { RcartWidget } from './rcart-widget';
+import TrackerProvider from './components/tracker/TrackerProvider';
 
 /** Shopify themes often wrap blocks in `.page-width`; strip horizontal padding so the widget can go edge-to-edge. */
 function zeroHorizontalPaddingOnNearestPageWidth(widgetRoot: HTMLElement) {
@@ -32,6 +33,7 @@ export function mountRcartWidget(container: HTMLElement) {
   root.render(
     <React.StrictMode>
       <ThemeProvider defaultMode="system">
+        <TrackerProvider />
         <RcartWidget partnerCode={partnerCode} email={email} storeName={storeName} apiUrl={apiUrl} shop={shop} />
       </ThemeProvider>
     </React.StrictMode>
