@@ -12,8 +12,7 @@
   "dependencies": {
     "getjacked-components": "github:bedrockholding/getjacked-component",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^7.14.2"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",

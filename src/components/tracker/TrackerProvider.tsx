@@ -1,12 +1,11 @@
 import { useEffect, useState, Suspense } from "react";
-import { useLocation } from "react-router-dom";
+
 import * as pixel from "../../lib/fbpixel.js";
 
 
 const FacebookPixel = () => {
   const [loaded, setLoaded] = useState(false);
 
-  const location = useLocation();
 
   // Get query params
   const queryParams: Record<string, string | null> = {};
@@ -34,7 +33,7 @@ const FacebookPixel = () => {
   useEffect(() => {
     if (!loaded) return;
     pixel.pageview(queryParams);
-  }, [location.pathname, location.search, loaded]);
+  }, [window.location.pathname, window.location.search, loaded]);
 
   return null;
 };
