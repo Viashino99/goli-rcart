@@ -12,6 +12,7 @@ function zeroHorizontalPaddingOnNearestPageWidth(widgetRoot: HTMLElement) {
   if (!pageWidth) return;
   pageWidth.style.paddingLeft = '0';
   pageWidth.style.paddingRight = '0';
+  pageWidth.style.maxWidth = '100%';
 }
 
 // Mount function so Shopify theme / app-extension script can call it explicitly.
