@@ -20,12 +20,8 @@ export function mountRcartWidget(container: HTMLElement) {
   root.render(
     <React.StrictMode>
       <ThemeProvider defaultMode="system">
-<<<<<<< HEAD
-        <RcartWidget partnerCode={partnerCode} email={email} storeName={storeName} apiUrl={apiUrl} shop={shop} />
-=======
         <TrackerProvider />
-        <RcartWidget partnerCode={partnerCode} email={email} storeName={storeName} />
->>>>>>> 092934b (add pixel events)
+        <RcartWidget partnerCode={partnerCode} email={email} storeName={storeName} apiUrl={apiUrl} shop={shop} />
       </ThemeProvider>
     </React.StrictMode>
   );
