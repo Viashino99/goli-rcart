@@ -2,6 +2,9 @@
 node_modules/
 rcart-widget-goli/node_modules/
 
+# rcart-api (excluded for now)
+rcart-api/
+
 # Build output
 dist/
 rcart-widget-goli/extensions/rcart-goli-ext/assets/rcart-widget.js
@@ -15,6 +18,7 @@ rcart-widget-goli/.shopify/
 .env
 .env.local
 .env.*.local
+rcart-api/.env
 
 # OS
 .DS_Store

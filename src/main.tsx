@@ -12,12 +12,14 @@ export function mountRcartWidget(container: HTMLElement) {
   const partnerCode = dataset.partnerCode || '';
   const email = dataset.email || null;
   const storeName = dataset.storeName || '';
+  const apiUrl = dataset.apiUrl || '';
+  const shop = dataset.shop || '';
 
   const root = ReactDOM.createRoot(container);
   root.render(
     <React.StrictMode>
       <ThemeProvider defaultMode="system">
-        <RcartWidget partnerCode={partnerCode} email={email} storeName={storeName} />
+        <RcartWidget partnerCode={partnerCode} email={email} storeName={storeName} apiUrl={apiUrl} shop={shop} />
       </ThemeProvider>
     </React.StrictMode>
   );

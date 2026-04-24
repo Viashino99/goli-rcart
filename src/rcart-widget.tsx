@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   SectionHero,
   SectionGames,
@@ -14,6 +14,8 @@ export type RcartWidgetProps = {
   partnerCode: string;
   email: string | null;
   storeName?: string;
+  apiUrl?: string;
+  shop?: string;
 };
 
 function isGamesHash(): boolean {
@@ -21,12 +23,13 @@ function isGamesHash(): boolean {
   return window.location.hash === '#games';
 }
 
-export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store' }: RcartWidgetProps) {
+export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store', apiUrl = '', shop = '' }: RcartWidgetProps) {
   const [resolvedEmail, setResolvedEmail] = useState<string | null>(email);
   const [showPage, setShowPage] = useState<'landing' | 'games'>(() =>
     isGamesHash() ? 'games' : 'landing',
   );
   const [discountCode, setDiscountCode] = useState<string | null>(null);
+  const prevActivityCount = useRef<number>(0);
 
   const { games, activities, partnerSettings, rewardAmount, loading, error,sessionUser, refetch } = useRcartGameApi({
     partnerCode,
@@ -66,22 +69,76 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
     // TODO: Add shopify login logic to login the user and then set the resolvedEmail
     setResolvedEmail(submittedEmail);
     gotoGamesPage?.();
+    callNotifyApi('welcome', 'Welcome', { emailOverride: submittedEmail });
   };
 
-  const handleGenerateDiscountCode = () => {
-    //TODO: Add shopify tracking here and internal logic.
-    //TODO: Pass the discount code value generated to set discount code (setDiscountCode)
-    setDiscountCode("GOLI123"); 
-    console.log("Generate discount code");
-  }
-  const handleFirstMilestoneClaim = () => {
-    //TODO: Add shopify tracking here and internal logic.
-    console.log("First milestone claimed");
-  }
-  const handleLastMilestoneClaim = () => {
-    //TODO: Add shopify tracking here and internal logic.
-    console.log("Last milestone claimed");
-  }
+  const callDiscountApi = async (amount: 5 | 100): Promise<string | null> => {
+    if (!apiUrl || !shop || !resolvedEmail) return null;
+    try {
+      const res = await fetch(`${apiUrl}/api/widget/discount`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: resolvedEmail, email: resolvedEmail, partnerCode, shop, amount }),
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.code ?? null;
+    } catch {
+      return null;
+    }
+  };
+
+  const callNotifyApi = async (
+    icon: 'welcome' | 'gift' | 'trophy' | 'dollar',
+    label: string,
+    extra?: { price?: number; targetAmount?: number; discountCode?: string; emailOverride?: string },
+  ) => {
+    const effectiveEmail = extra?.emailOverride ?? resolvedEmail;
+    if (!apiUrl || !effectiveEmail || !shop) return;
+    try {
+      await fetch(`${apiUrl}/api/widget/notify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: effectiveEmail,
+          email: effectiveEmail,
+          partnerCode,
+          shop,
+          storeName,
+          icon,
+          label,
+          ...extra,
+        }),
+      });
+    } catch { /* non-blocking */ }
+  };
+
+  const handleGenerateDiscountCode = async () => {
+    const code = await callDiscountApi(100);
+    if (code) setDiscountCode(code);
+  };
+
+  const handleFirstMilestoneClaim = async () => {
+    const code = await callDiscountApi(5);
+    if (code) setDiscountCode(code);
+    await callNotifyApi('gift', 'First Reward — $15', { price: 5, discountCode: code ?? undefined });
+  };
+
+  const handleLastMilestoneClaim = async () => {
+    const code = await callDiscountApi(100);
+    if (code) setDiscountCode(code);
+    await callNotifyApi('dollar', '$160 Goal Reached', { targetAmount: 160, discountCode: code ?? undefined });
+  };
+
+  // Task 3: send trophy email each time a new game step activity is completed
+  useEffect(() => {
+    const count = activities?.length ?? 0;
+    if (resolvedEmail && count > prevActivityCount.current && prevActivityCount.current > 0) {
+      callNotifyApi('trophy', 'Game step completed');
+    }
+    prevActivityCount.current = count;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activities?.length]);
 
 
   return (

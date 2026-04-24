@@ -2,7 +2,7 @@
 
 client_id = "86d8964cf648b42fcfe8a23456aa6953"
 name = "rcart-widget-goli"
-application_url = "https://shopify.dev/apps/default-app-home"
+application_url = "https://e0cb-104-221-99-46.ngrok-free.app"
 embedded = true
 
 [build]
@@ -11,9 +11,13 @@ automatically_update_urls_on_dev = true
 [webhooks]
 api_version = "2026-07"
 
+[[webhooks.subscriptions]]
+topics = ["app/uninstalled"]
+uri = "/api/webhooks/app-uninstalled"
+
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = ""
+scopes = "write_price_rules,write_discounts,read_discounts"
 
 [auth]
-redirect_urls = [ "https://shopify.dev/apps/default-app-home/api/auth" ]
+redirect_urls = [ "https://e0cb-104-221-99-46.ngrok-free.app/api/auth/callback" ]
