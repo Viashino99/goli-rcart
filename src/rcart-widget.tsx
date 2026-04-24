@@ -161,12 +161,7 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
         logoSrc='' //TODO: Add logo src
         logoAlt={brandLabel} //TODO: Add logo alt
         isLoggedIn={!!isLoggedIn}
-        isLandingPage={showPage === 'landing'}
-        onRewardsClick={gotoLandingPage}
         onCtaClick={gotoGamesPage}
-        onCartClick={() => {
-          console.log('cart clicked');
-        }}
         rewardAmount={rewardAmount || 0}
         partnerSettings={partnerSettings}
         discountCode={discountCode || ""}
