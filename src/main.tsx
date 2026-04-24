@@ -4,9 +4,22 @@ import { ThemeProvider } from 'getjacked-components';
 import 'getjacked-components/style.css';
 import { RcartWidget } from './rcart-widget';
 
+/** Shopify themes often wrap blocks in `.page-width`; strip horizontal padding so the widget can go edge-to-edge. */
+function zeroHorizontalPaddingOnNearestPageWidth(widgetRoot: HTMLElement) {
+  const pageWidth =
+    widgetRoot.parentElement?.closest<HTMLElement>('.page-width') ?? null;
+  if (!pageWidth) return;
+  pageWidth.style.paddingLeft = '0';
+  pageWidth.style.paddingRight = '0';
+}
+
 // Mount function so Shopify theme / app-extension script can call it explicitly.
 // It looks for a container element and reads data attributes as configuration.
 export function mountRcartWidget(container: HTMLElement) {
+  if (container.id === 'rcart-widget-root') {
+    zeroHorizontalPaddingOnNearestPageWidth(container);
+  }
+
   const dataset = container.dataset;
 
   const partnerCode = dataset.partnerCode || '';

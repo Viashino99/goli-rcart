@@ -26,6 +26,8 @@ export type StorefrontHeaderProps = {
   thresholdAmount?: number;
   partnerSettings?: Record<string, any>;
   discountCode?: string;
+  onLogout?: () => void;
+  logoutLabel?: string;
   onGenerateDiscountCode?: OnGenerateDiscountCode;
   onClaimFirstMilestone?: () => void;
   onClaimLastMilestone?: () => void;
@@ -105,6 +107,8 @@ export function StorefrontHeader({
   thresholdAmount,
   partnerSettings,
   discountCode,
+  onLogout,
+  logoutLabel = 'Log out',
   onGenerateDiscountCode,
   onClaimFirstMilestone,
   onClaimLastMilestone,
@@ -125,13 +129,24 @@ export function StorefrontHeader({
 
             {isLoggedIn ? (
               <>
+              
+                {onLogout && (
+                  <button
+                    type="button"
+                    className={styles.rewards}
+                    onClick={onLogout}
+                    aria-label={logoutLabel}
+                  >
+                    {logoutLabel}
+                  </button>
+                )}
+
                 <ProgressAmount
                   amount={String(rewardAmount)}
                   thresholdAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount) || 0}
                   textColor="#1e1e1e"
                   borderColor="#1e1e1e"
                 />
-
                 <button
                   type="button"
                   className={styles.iconBtn}
