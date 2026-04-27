@@ -5,6 +5,8 @@
   data-partner-code="{{ block.settings.partner_code }}"
   data-store-name="{{ block.settings.store_name | escape }}"
   data-shop="{{ shop.permanent_domain }}"
+  data-fbpixel-src="{{ 'fbpixel.js' | asset_url }}"
+  {% if block.settings.facebook_pixel_id != blank %}data-facebook-pixel-id="{{ block.settings.facebook_pixel_id | escape }}"{% endif %}
   {% if customer %}data-email="{{ customer.email | escape }}"{% endif %}
 ></div>
 
@@ -41,6 +43,19 @@
       "id": "store_name",
       "label": "Store name",
       "default": "My Store"
+    },
+    {
+      "type": "text",
+      "id": "api_url",
+      "label": "API URL",
+      "info": "Full URL of the rcart-api backend e.g. https://abc123.awsapprunner.com",
+      "default": "https://example.com"
+    },
+    {
+      "type": "text",
+      "id": "facebook_pixel_id",
+      "label": "Facebook Pixel ID",
+      "info": "Optional. goli-rcart builds normally use VITE_FACEBOOK_PIXEL_ID from .env at vite build. Set this only when the bundle was built without a pixel ID."
     }
   ]
 }
