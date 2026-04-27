@@ -116,7 +116,15 @@ export function StorefrontHeader({
           </div>
         </div>
         {isLoggedIn && (
-          <div className={styles.progressRewardContainer}>
+          <div
+            className={
+              styles.progressRewardContainer +
+              (partnerSettings?.milestones?.[1]?.status === 'earned' ||
+              partnerSettings?.milestones?.[1]?.status === 'claimed'
+                ? ' ' + styles.lastClaim
+                : '')
+            }
+          >
             <ProgressRewards
               partnerName={partnerName}
               milestones={partnerSettings?.milestones || []}
@@ -130,7 +138,7 @@ export function StorefrontHeader({
               onClaimLater={() => {
                 console.log('Claim later');
               }}
-              redirectUrl="https://example.com/"
+              redirectUrl="/collections/all"
               onClaimFirstMilestone={onClaimFirstMilestone}
               onClaimLastMilestone={onClaimLastMilestone}
               onGenerateDiscountCode={onGenerateDiscountCode}

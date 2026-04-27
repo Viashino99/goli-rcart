@@ -2,6 +2,14 @@ import { useEffect, useState, Suspense } from "react";
 
 import * as pixel from "../../lib/fbpixel.js";
 
+/** Theme app extension: Liquid sets `data-fbpixel-src` to `fbpixel.js` asset_url. Vite dev serves `public/fbpixel.js` at `/fbpixel.js`. */
+function resolveFbpixelScriptUrl(): string | null {
+  if (typeof document === "undefined") return null;
+  const fromBlock = document.getElementById("rcart-widget-root")?.dataset.fbpixelSrc?.trim();
+  if (fromBlock) return fromBlock;
+  return "/fbpixel.js";
+}
+
 function readUrlKey(): string {
   if (typeof window === "undefined") return "";
   return `${window.location.pathname}${window.location.search}`;
@@ -26,16 +34,27 @@ const FacebookPixel = () => {
   // Load script manually (replacement for next/script)
   useEffect(() => {
     if (typeof document === "undefined") return;
+    const pixelId = pixel.getFacebookPixelId();
+    if (!pixelId) {
+      setLoaded(true);
+      return;
+    }
+    const src = resolveFbpixelScriptUrl();
+    if (!src) {
+      setLoaded(true);
+      return;
+    }
     const script = document.createElement("script");
-    script.src = "/scripts/fbpixel.js";
+    script.src = src;
     script.async = true;
-    script.setAttribute("data-pixel-id", pixel.FB_PIXEL_ID);
+    script.setAttribute("data-pixel-id", pixelId);
     script.onload = () => setLoaded(true);
+    script.onerror = () => setLoaded(true);
 
     document.body.appendChild(script);
 
     return () => {
-      document.body.removeChild(script);
+      script.remove();
     };
   }, []);
 

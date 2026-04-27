@@ -12,6 +12,7 @@ import {
 import { StorefrontHeader } from './components/storefront-header';
 import { useRcartGameApi } from './use-rcart-game-api';
 import * as pixel from "./lib/fbpixel";
+import styles from './components/storefront-header/StorefrontHeader.module.css';
 
 export type RcartWidgetProps = {
   partnerCode: string;
@@ -43,11 +44,13 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
     email: resolvedEmail,
   });
 
+  const logoSrc = 'https://test.withrcart.com/goli/goli-logo.png';
+  const heroImageSrc = 'https://test.withrcart.com/goli/goli-latest-hero.jpg';
   const brandLabel = storeName?.trim() ? storeName : '';
   const heroGame = games?.[0];
   const gameList = games?.slice(1);
 
-  const isLoggedIn = sessionUser?.email;
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(!!sessionUser?.email);
 
   useEffect(() => {
     if (initialWidgetPageviewSent) return;
@@ -71,9 +74,12 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
     });
 
     setShowPage('games');
-    if (typeof window !== 'undefined' && window.location.hash !== '#games') {
-      const { pathname, search } = window.location;
-      window.history.replaceState(null, '', `${pathname}${search}#games`);
+    if (typeof window !== 'undefined') {
+      if (window.location.hash !== '#games') {
+        const { pathname, search } = window.location;
+        window.history.replaceState(null, '', `${pathname}${search}#games`);
+      }
+      window.scrollTo({ top: 0 });
     }
   };
   const gotoLandingPage = () => {
@@ -98,7 +104,9 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
     // Clears persisted session (email + userId) via getjacked-components; keeps widget email in sync.
     // TODO: Add Shopify logout redirect / storefront session invalidation when integrated.
     logout();
+    setIsLoggedIn(false);
     setResolvedEmail(null);
+    gotoLandingPage?.();
     console.log("Logged out");
   };
 
@@ -126,7 +134,7 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
     const effectiveEmail = extra?.emailOverride ?? resolvedEmail;
     if (!apiUrl || !effectiveEmail || !shop) return;
     try {
-      await fetch(`${apiUrl}/api/widget/notify`, {
+      await fetch(`${apiUrl}/api/notify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -177,8 +185,8 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
         partnerCode={partnerCode}
         partnerName={storeName}
         brandLabel={brandLabel}
-        logoSrc='' //TODO: Add logo src
-        logoAlt={brandLabel} //TODO: Add logo alt
+        logoSrc={logoSrc}
+        logoAlt={brandLabel}
         isLoggedIn={!!isLoggedIn}
         onCtaClick={gotoGamesPage}
         rewardAmount={rewardAmount || 0}
@@ -198,20 +206,22 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
             discountAmount={partnerSettings.rewardGoal?.discount}
             onCTAClick={gotoGamesPage}
             to="#games"
+            heroImageSrc={heroImageSrc}
+            className={styles.goliHeroSection}
           />
           <SectionPartneredGames
               partnerCode={partnerCode}
               partnerName={storeName}
-              maxIncompleteOffers={partnerSettings.maxIncompleteOffers}       
+              maxIncompleteOffers={partnerSettings.maxIncompleteOffers || 5}       
               bundleAmount={Number(partnerSettings.rewardGoal?.thresholdAmount ?? rewardAmount)}
               rewardAmount={rewardAmount}
-              isLoggedIn={!!resolvedEmail}
               activities={resolvedEmail ? activities : []}
               partnerSettings={partnerSettings}
               refetchOffers={refetch}    
               onLogin={handleLogin}
               onBrowse={gotoGamesPage}
               to="#games"
+              isLoggedIn={isLoggedIn ? true : false}
             />
           <SectionSteps
             partnerName={storeName}
@@ -223,7 +233,7 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
             ]}
             ctaText="Start Playing"
             onCTAClick={gotoGamesPage}
-            to=""
+            to="#games"
           />
           <SectionFaq
             partnerCode={partnerCode}
@@ -281,7 +291,6 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
               partnerSettings={partnerSettings}
               rewardAmount={Number(rewardAmount) || 0}
               bundleAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount) || 0}
-              isLoggedIn={!!resolvedEmail}
               onLogin={handleLogin}
               onStartGame={(selectedGame) => {
                 // User started an offer from the list / activities area (not necessarily the hero game).
@@ -314,7 +323,8 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
               refetchOffers={refetch}
               discountCode={discountCode || ""}
               onGenerateDiscountCode={handleGenerateDiscountCode}
-              redirectUrl="https://example.com/"
+              redirectUrl="/collections/all"
+              isLoggedIn={isLoggedIn ? true : false}
             />
           </div>
         </>

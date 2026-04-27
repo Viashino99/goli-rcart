@@ -1,3 +1,10 @@
+div:empty {
+  display: inherit!important;
+}
+.goliHeroSection img {
+  object-position: center!important;
+}
+
 .shell {
   background-color: #fff;
   border-top: 1px solid #e5e5e5;
@@ -9,7 +16,7 @@
   position: relative;
   max-width: 1350px;
   margin: 0 auto;
-  padding: 14px clamp(16px, 10vw, 48px);
+  padding: 14px clamp(16px, 10vw, 16px);
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -57,6 +64,13 @@
     max-width: min(560px, 42vw);
     pointer-events: auto;
   }
+
+  .progressRewardContainer.lastClaim {
+    right: 0;
+    transform: translate(-115px, -50%);
+    left: inherit;
+  }
+
 }
 
 .brandSlot {
@@ -67,7 +81,7 @@
 
 .brandLogoImg {
   display: block;
-  max-height: 32px;
+  max-height: 65px;
   width: auto;
   max-width: min(200px, 40vw);
   object-fit: contain;
@@ -93,8 +107,7 @@
   margin: 0;
   border: none;
   background: none;
-  font: inherit;
-  font-size: 0.9375rem;
+  font-size: 14px;
   font-weight: 400;
   color: #6b6b6b;
   cursor: pointer;
