@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   SectionHero,
   SectionGames,
@@ -27,11 +27,59 @@ function isGamesHash(): boolean {
   return window.location.hash === '#games';
 }
 
+function isPlausibleEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function normalizeLiquidEmail(propEmail: string | null): string | null {
+  const t = propEmail?.trim() ?? '';
+  return t && isPlausibleEmail(t) ? t : null;
+}
+
+/**
+ * Reads `?email=` / `?accountHash=` once at mount.
+ * - No `email` or `accountHash` query keys → use Shopify/Liquid customer email only (never force empty).
+ * - Either key present (magic link) → valid URL email wins; invalid/missing URL email falls back to Liquid so we do not clear the session.
+ */
+function readWidgetUrlParams(propEmail: string | null): { email: string | null; accountHash: string | null } {
+  const liquid = normalizeLiquidEmail(propEmail);
+  if (typeof window === 'undefined') {
+    return { email: liquid, accountHash: null };
+  }
+  const params = new URLSearchParams(window.location.search);
+  const hasEmailKey = params.has('email');
+  const hasHashKey = params.has('accountHash');
+
+  if (!hasEmailKey && !hasHashKey) {
+    return { email: liquid, accountHash: null };
+  }
+
+  const rawEmail = params.get('email')?.trim() ?? '';
+  const urlEmail = rawEmail && isPlausibleEmail(rawEmail) ? rawEmail : null;
+  const rawHash = params.get('accountHash')?.trim() ?? '';
+  const accountHash = rawHash.length > 0 ? rawHash : null;
+  const email = urlEmail ?? liquid;
+
+  return { email, accountHash };
+}
+
+function stripEmailAndAccountHashFromUrl(): void {
+  const url = new URL(window.location.href);
+  if (!url.searchParams.has('email') && !url.searchParams.has('accountHash')) return;
+  url.searchParams.delete('email');
+  url.searchParams.delete('accountHash');
+  const q = url.searchParams.toString();
+  window.history.replaceState(null, '', `${url.pathname}${q ? `?${q}` : ''}${url.hash}`);
+}
+
 /** Survives StrictMode dev double-mount so `pageview` is not sent twice. */
 let initialWidgetPageviewSent = false;
 
 export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store', apiUrl = '', shop = '' }: RcartWidgetProps) {
-  const [resolvedEmail, setResolvedEmail] = useState<string | null>(email);
+  // One-time read of `?email=` / `?accountHash=` on first client render.
+  const fromUrl = useMemo(() => readWidgetUrlParams(email), []);
+  const [resolvedEmail, setResolvedEmail] = useState<string | null>(fromUrl.email);
+  const urlAccountHashRef = useRef<string | null>(fromUrl.accountHash);
   const [showPage, setShowPage] = useState<'landing' | 'games'>(() =>
     isGamesHash() ? 'games' : 'landing',
   );
@@ -50,7 +98,7 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
   const heroGame = games?.[0];
   const gameList = games?.slice(1);
 
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(!!sessionUser?.email);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(!!fromUrl.email);
 
   useEffect(() => {
     if (initialWidgetPageviewSent) return;
@@ -66,6 +114,22 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
+
+  useEffect(() => {
+
+    console.log("stripEmailAndAccountHashFromUrl", resolvedEmail, isLoggedIn);
+    if (typeof window === 'undefined') return;
+    if (!resolvedEmail || !isLoggedIn) return;
+    stripEmailAndAccountHashFromUrl();
+  }, [resolvedEmail, isLoggedIn]);
+
+  // Restore email from getjacked session when URL did not supply one (keeps returning visitors logged in).
+  useEffect(() => {
+    const u = sessionUser?.email?.trim();
+    if (!u || !isPlausibleEmail(u) || resolvedEmail) return;
+    setResolvedEmail(u);
+    setIsLoggedIn(true);
+  }, [sessionUser?.email, resolvedEmail]);
 
   const gotoGamesPage = () => {
     //TODO: Add shopify logic to redirect to the games page
@@ -97,15 +161,16 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
       email: submittedEmail,
     });
     setResolvedEmail(submittedEmail);
+    setIsLoggedIn(true);
     gotoGamesPage?.();
     callNotifyApi('welcome', 'Welcome', { emailOverride: submittedEmail });
   };
   const handleLogout = () => {
     // Clears persisted session (email + userId) via getjacked-components; keeps widget email in sync.
     // TODO: Add Shopify logout redirect / storefront session invalidation when integrated.
-    logout();
     setIsLoggedIn(false);
     setResolvedEmail(null);
+    logout();
     gotoLandingPage?.();
     console.log("Logged out");
   };
@@ -116,7 +181,14 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
       const res = await fetch(`${apiUrl}/api/widget/discount`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: resolvedEmail, email: resolvedEmail, partnerCode, shop, amount }),
+        body: JSON.stringify({
+          userId: resolvedEmail,
+          email: resolvedEmail,
+          partnerCode,
+          shop,
+          amount,
+          ...(urlAccountHashRef.current ? { accountHash: urlAccountHashRef.current } : {}),
+        }),
       });
       if (!res.ok) return null;
       const data = await res.json();
@@ -145,6 +217,7 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
           storeName,
           icon,
           label,
+          ...(urlAccountHashRef.current ? { accountHash: urlAccountHashRef.current } : {}),
           ...extra,
         }),
       });
@@ -153,7 +226,11 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
 
   const handleGenerateDiscountCode = async () => {
     const code = await callDiscountApi(100);
-    if (code) setDiscountCode(code);
+    if (code) {
+      setDiscountCode(code);
+    } else {
+      setDiscountCode('TEST_CODE123');
+    }
   };
 
   const handleFirstMilestoneClaim = async () => {
@@ -213,15 +290,14 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
               partnerCode={partnerCode}
               partnerName={storeName}
               maxIncompleteOffers={partnerSettings.maxIncompleteOffers || 5}       
-              bundleAmount={Number(partnerSettings.rewardGoal?.thresholdAmount ?? rewardAmount)}
-              rewardAmount={rewardAmount}
-              activities={resolvedEmail ? activities : []}
+              bundleAmount={Number(partnerSettings.rewardGoal?.thresholdAmount) || 0}
+              rewardAmount={Number(rewardAmount) || 0}
+              activities={activities || []}
               partnerSettings={partnerSettings}
-              refetchOffers={refetch}    
               onLogin={handleLogin}
               onBrowse={gotoGamesPage}
               to="#games"
-              isLoggedIn={isLoggedIn ? true : false}
+              isLoggedIn={isLoggedIn}
             />
           <SectionSteps
             partnerName={storeName}
@@ -260,6 +336,7 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
           
               console.log("Game Hero CTA Clicked!");
             }}
+            partnerSettings={partnerSettings}
             bundleAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount) || 0}
             rewardAmount={Number(rewardAmount) || 0}
             onLogin={handleLogin}
@@ -278,7 +355,7 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
               // TODO: analytics — game_cta_click (source: hero)
               console.log("Game CTA Clicked!", selectedGame);
             }}
-            activities={resolvedEmail ? activities : []}
+            activities={activities || []}
             maxIncompleteOffers={partnerSettings?.maxIncompleteOffers || 5}
             refetchOffers={refetch}
           />
@@ -324,7 +401,7 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
               discountCode={discountCode || ""}
               onGenerateDiscountCode={handleGenerateDiscountCode}
               redirectUrl="/collections/all"
-              isLoggedIn={isLoggedIn ? true : false}
+              isLoggedIn={isLoggedIn}
             />
           </div>
         </>
