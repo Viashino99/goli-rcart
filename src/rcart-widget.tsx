@@ -274,6 +274,7 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
         onClaimFirstMilestone={handleFirstMilestoneClaim}
         onClaimLastMilestone={handleLastMilestoneClaim}
         islanding={showPage === 'landing' ? true : false}
+        ctaLabel={"Unlock " + "$"+ (loading ? 0 : partnerSettings?.rewardGoal?.thresholdAmount || 0) + " Now"}
       />
 
       {showPage === 'landing' ? (
