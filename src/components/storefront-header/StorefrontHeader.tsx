@@ -21,6 +21,7 @@ export type StorefrontHeaderProps = {
   rewardAmount?: number;
   partnerSettings?: Record<string, any>;
   discountCode?: string;
+  islanding?: boolean;
   onCtaClick?: () => void;
   onLogout?: () => void;
   onGenerateDiscountCode?: OnGenerateDiscountCode;
@@ -70,6 +71,7 @@ export function StorefrontHeader({
   rewardAmount,
   partnerSettings,
   discountCode,
+  islanding,
   onLogout,
   logoutLabel = 'Log out',
   onGenerateDiscountCode,
@@ -109,9 +111,11 @@ export function StorefrontHeader({
                 />
               </>
             ) : (
-              <button type="button" className={styles.cta} onClick={onCtaClick}>
-                {ctaLabel}
-              </button>
+              islanding && (
+                <button type="button" className={styles.cta} onClick={onCtaClick}>
+                  {ctaLabel}
+                </button>
+              )
             )}
           </div>
         </div>
