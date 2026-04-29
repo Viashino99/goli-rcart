@@ -273,6 +273,7 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
         onGenerateDiscountCode={handleGenerateDiscountCode}
         onClaimFirstMilestone={handleFirstMilestoneClaim}
         onClaimLastMilestone={handleLastMilestoneClaim}
+        islanding={showPage === 'landing' ? true : false}
       />
 
       {showPage === 'landing' ? (
