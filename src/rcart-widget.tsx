@@ -172,6 +172,7 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
     setResolvedEmail(null);
     logout();
     gotoLandingPage?.();
+    window.location.reload();
     console.log("Logged out");
   };
 
