@@ -312,6 +312,10 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
             ctaText="Start Playing"
             onCTAClick={gotoGamesPage}
             to="#games"
+            bundleAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount) || 0}
+            discountAmount={Number(partnerSettings?.rewardGoal?.discount) || 0}
+            installAmount={5}
+            levelUpAmount={145}
           />
           <SectionFaq
             partnerCode={partnerCode}
@@ -359,7 +363,7 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
             }}
             activities={activities || []}
             maxIncompleteOffers={partnerSettings?.maxIncompleteOffers || 5}
-            refetchOffers={refetch}
+            refetchOffers={refetch}    
           />
 
           <div id="rcart-widget-games" style={{ scrollMarginTop: '1rem' }}>
