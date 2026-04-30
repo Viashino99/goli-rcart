@@ -13,7 +13,6 @@
     "copy:widget": "cp ../dist/assets/rcart-widget.js ./extensions/rcart-goli-ext/assets/rcart-widget.js && cp ../dist/assets/rcart-widget.css ./extensions/rcart-goli-ext/assets/rcart-widget.css",
     "build:all": "npm run build:widget && npm run copy:widget && npm run build"
   },
-  "dependencies": {},
   "trustedDependencies": [
     "@shopify/plugin-cloudflare"
   ],

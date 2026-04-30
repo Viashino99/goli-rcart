@@ -10,7 +10,7 @@
     "deploy:cdn": "vite build && gh-pages -d dist/assets -b gh-pages"
   },
   "dependencies": {
-    "getjacked-components": "github:bedrockholding/getjacked-component",
+    "getjacked-components": "^0.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
