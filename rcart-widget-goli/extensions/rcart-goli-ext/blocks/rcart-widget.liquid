@@ -4,10 +4,13 @@
   id="rcart-widget-root"
   data-partner-code="{{ block.settings.partner_code }}"
   data-store-name="{{ block.settings.store_name | escape }}"
+  data-api-url="{{ block.settings.api_url | escape }}"
   data-shop="{{ shop.permanent_domain }}"
+  {% if block.settings.api_key != blank %}data-api-key="{{ block.settings.api_key | escape }}"{% endif %}
   data-fbpixel-src="{{ 'fbpixel.js' | asset_url }}"
   {% if block.settings.facebook_pixel_id != blank %}data-facebook-pixel-id="{{ block.settings.facebook_pixel_id | escape }}"{% endif %}
   {% if customer %}data-email="{{ customer.email | escape }}"{% endif %}
+  {% if customer %}data-user-id="{{ customer.id | escape }}"{% endif %}
 ></div>
 
 <script src="{{ 'rcart-widget.js' | asset_url }}" defer></script>
@@ -42,14 +45,21 @@
       "type": "text",
       "id": "store_name",
       "label": "Store name",
-      "default": "My Store"
+      "default": "Goli"
     },
     {
       "type": "text",
       "id": "api_url",
       "label": "API URL",
-      "info": "Full URL of the rcart-api backend e.g. https://abc123.awsapprunner.com",
-      "default": "https://example.com"
+      "info": "rcart API base URL, e.g. https://rcart-api.vercel.app",
+      "default": "https://rcart-api.vercel.app"
+    },
+    {
+      "type": "text",
+      "id": "api_key",
+      "label": "API key",
+      "info": "Sent as X-Api-Key on /api/discount. Visible in storefront HTML — prefer app embed secrets only when acceptable.",
+      "default": "goli_dev_key_001"
     },
     {
       "type": "text",

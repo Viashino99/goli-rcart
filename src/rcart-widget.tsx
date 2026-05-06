@@ -16,10 +16,13 @@ import styles from './components/storefront-header/StorefrontHeader.module.css';
 
 export type RcartWidgetProps = {
   partnerCode: string;
+  userId: string;
   email: string | null;
   storeName?: string;
   apiUrl?: string;
   shop?: string;
+  /** Sent as `X-Api-Key` on `/api/discount` (theme setting or `VITE_RCART_API_KEY` at build). */
+  apiKey?: string;
 };
 
 function isGamesHash(): boolean {
@@ -75,7 +78,15 @@ function stripEmailAndAccountHashFromUrl(): void {
 /** Survives StrictMode dev double-mount so `pageview` is not sent twice. */
 let initialWidgetPageviewSent = false;
 
-export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store', apiUrl = '', shop = '' }: RcartWidgetProps) {
+export function RcartWidget({
+  partnerCode = 'goli',
+  email,
+  storeName = 'My Store',
+  apiUrl = '',
+  shop = '',
+  apiKey = '',
+  userId = '',
+}: RcartWidgetProps) {
   // One-time read of `?email=` / `?accountHash=` on first client render.
   const fromUrl = useMemo(() => readWidgetUrlParams(email), []);
   const [resolvedEmail, setResolvedEmail] = useState<string | null>(fromUrl.email);
@@ -177,24 +188,33 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
   };
 
   const callDiscountApi = async (amount: 5 | 100): Promise<string | null> => {
-    if (!apiUrl || !shop || !resolvedEmail) return null;
+    const key = apiKey?.trim();
+    if (!apiUrl || !shop || !resolvedEmail || !key) {
+      return null;
+    }
     try {
-      const res = await fetch(`${apiUrl}/api/widget/discount`, {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'X-Api-Key': key,
+      };
+      const res = await fetch(`${apiUrl.replace(/\/$/, '')}/api/discount`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
-          userId: resolvedEmail,
-          email: resolvedEmail,
-          partnerCode,
-          shop,
-          amount,
+          userId: userId,
+          email: email,
+          partnerCode: partnerCode,
+          shop: shop,
+          amount: amount,
           ...(urlAccountHashRef.current ? { accountHash: urlAccountHashRef.current } : {}),
         }),
       });
       if (!res.ok) return null;
       const data = await res.json();
+      console.log("callDiscountApi data: ", data);
       return data.code ?? null;
-    } catch {
+    } catch (error) {
+      console.error('callDiscountApi error', error);
       return null;
     }
   };
@@ -211,7 +231,7 @@ export function RcartWidget({ partnerCode = 'goli', email, storeName = 'My Store
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: effectiveEmail,
+          userId: userId,
           email: effectiveEmail,
           partnerCode,
           shop,
