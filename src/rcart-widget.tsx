@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   SectionHero,
   SectionGames,
@@ -25,6 +25,45 @@ export type RcartWidgetProps = {
   apiKey?: string;
 };
 
+/** Body shape for `POST /api/notify` milestone emails. */
+export type NotifyMilestonePayload = {
+  id: string;
+  icon: 'gift' | 'dollar';
+  label: string;
+  price?: number;
+  targetAmount?: number;
+  status: 'locked' | 'earned' | 'claimed';
+};
+
+const WELCOME_NOTIFY_MILESTONE: NotifyMilestonePayload = {
+  id: 'welcome',
+  icon: 'gift',
+  label: 'Welcome',
+  status: 'earned',
+};
+
+function welcomeNotifyStorageKey(email: string): string {
+  return `rcart:welcomeNotify:v1:${email.trim().toLowerCase()}`;
+}
+
+function hasWelcomeNotifyHandled(email: string): boolean {
+  if (typeof window === 'undefined') return true;
+  try {
+    return window.localStorage.getItem(welcomeNotifyStorageKey(email)) === '1';
+  } catch {
+    return true;
+  }
+}
+
+function markWelcomeNotifyHandled(email: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(welcomeNotifyStorageKey(email), '1');
+  } catch {
+    /* ignore */
+  }
+}
+
 function isGamesHash(): boolean {
   if (typeof window === 'undefined') return false;
   return window.location.hash === '#games';
@@ -37,6 +76,14 @@ function isPlausibleEmail(value: string): boolean {
 function normalizeLiquidEmail(propEmail: string | null): string | null {
   const t = propEmail?.trim() ?? '';
   return t && isPlausibleEmail(t) ? t : null;
+}
+
+function pickSessionAccountHash(sessionUser: unknown): string | null {
+  if (!sessionUser || typeof sessionUser !== 'object') return null;
+  const h = (sessionUser as { accountHash?: unknown }).accountHash;
+  if (typeof h !== 'string') return null;
+  const t = h.trim();
+  return t.length > 0 ? t : null;
 }
 
 /**
@@ -103,6 +150,15 @@ export function RcartWidget({
     email: resolvedEmail,
   });
 
+  console.log("sessionUserteststst", sessionUser);
+
+  /** Magic-link `?accountHash=` wins; otherwise use persisted session hash from the game API. */
+  const effectiveAccountHash = useMemo((): string | null => {
+    const hashFromUrl = urlAccountHashRef.current?.trim();
+    if (hashFromUrl) return hashFromUrl;
+    return pickSessionAccountHash(sessionUser);
+  }, [sessionUser]);
+
   const logoSrc = 'https://test.withrcart.com/goli/goli-logo.png';
   const heroImageSrc = 'https://test.withrcart.com/goli/goli-latest-hero.jpg';
   const brandLabel = storeName?.trim() ? storeName : '';
@@ -166,16 +222,6 @@ export function RcartWidget({
       window.history.replaceState(null, '', `${pathname}${search}`);
     }
   };
-  const handleLogin = (submittedEmail: string) => {
-    // TODO: Add shopify login logic to login the user and then set the resolvedEmail
-    pixel.fbTracker("Complete Registration", {
-      email: submittedEmail,
-    });
-    setResolvedEmail(submittedEmail);
-    setIsLoggedIn(true);
-    gotoGamesPage?.();
-    callNotifyApi('welcome', 'Welcome', { emailOverride: submittedEmail });
-  };
   const handleLogout = () => {
     // Clears persisted session (email + userId) via getjacked-components; keeps widget email in sync.
     // TODO: Add Shopify logout redirect / storefront session invalidation when integrated.
@@ -197,16 +243,16 @@ export function RcartWidget({
         'Content-Type': 'application/json',
         'X-Api-Key': key,
       };
-      const res = await fetch(`${apiUrl.replace(/\/$/, '')}/api/discount`, {
+      const base = apiUrl.replace(/\/$/, '');
+      const res = await fetch(`${base}/api/discount`, {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          userId: userId,
-          email: email,
+          email: resolvedEmail,
           partnerCode: partnerCode,
           shop: shop,
           amount: amount,
-          ...(urlAccountHashRef.current ? { accountHash: urlAccountHashRef.current } : {}),
+          ...(effectiveAccountHash ? { accountHash: effectiveAccountHash } : {}),
         }),
       });
       if (!res.ok) return null;
@@ -219,31 +265,62 @@ export function RcartWidget({
     }
   };
 
-  const callNotifyApi = async (
-    icon: 'welcome' | 'gift' | 'trophy' | 'dollar',
-    label: string,
-    extra?: { price?: number; targetAmount?: number; discountCode?: string; emailOverride?: string },
-  ) => {
-    const effectiveEmail = extra?.emailOverride ?? resolvedEmail;
-    if (!apiUrl || !effectiveEmail || !shop) return;
-    try {
-      await fetch(`${apiUrl}/api/notify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: userId,
-          email: effectiveEmail,
-          partnerCode,
-          shop,
-          storeName,
-          icon,
-          label,
-          ...(urlAccountHashRef.current ? { accountHash: urlAccountHashRef.current } : {}),
-          ...extra,
-        }),
-      });
-    } catch { /* non-blocking */ }
+  const callNotifyApi = useCallback(
+    async (milestone: NotifyMilestonePayload, options?: { emailOverride?: string }) => {
+      const effectiveEmail = options?.emailOverride ?? resolvedEmail;
+      if (!apiUrl || !effectiveEmail || !shop) return;
+      try {
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+          'X-Api-Key': apiKey,
+        };
+        const base = apiUrl.replace(/\/$/, '');
+        await fetch(`${base}/api/notify`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            email: effectiveEmail,
+            partnerCode,
+            storeName,
+            shopDomain: shop,
+            ...(effectiveAccountHash ? { accountHash: effectiveAccountHash } : {}),
+            milestone: {
+              id: milestone.id,
+              icon: milestone.icon,
+              label: milestone.label,
+              ...(milestone.price != null ? { price: milestone.price } : {}),
+              ...(milestone.targetAmount != null ? { targetAmount: milestone.targetAmount } : {}),
+              status: milestone.status,
+            },
+          }),
+        });
+      } catch {
+        /* non-blocking */
+      }
+    },
+    [apiUrl, shop, apiKey, partnerCode, storeName, effectiveAccountHash, resolvedEmail],
+  );
+
+  const handleLogin = (submittedEmail: string) => {
+    // TODO: Add shopify login logic to login the user and then set the resolvedEmail
+    pixel.fbTracker('Complete Registration', {
+      email: submittedEmail,
+    });
+    setResolvedEmail(submittedEmail);
+    setIsLoggedIn(true);
+    gotoGamesPage?.();
+    void callNotifyApi(WELCOME_NOTIFY_MILESTONE, { emailOverride: submittedEmail });
+    markWelcomeNotifyHandled(submittedEmail);
   };
+
+  // Shopify Liquid session or restored getjacked session: same welcome notify as manual login (once per email in this browser).
+  useEffect(() => {
+    if (!resolvedEmail || !isLoggedIn || !isPlausibleEmail(resolvedEmail)) return;
+    if (!apiUrl || !shop) return;
+    if (hasWelcomeNotifyHandled(resolvedEmail)) return;
+    markWelcomeNotifyHandled(resolvedEmail);
+    void callNotifyApi(WELCOME_NOTIFY_MILESTONE, { emailOverride: resolvedEmail });
+  }, [resolvedEmail, isLoggedIn, apiUrl, shop, callNotifyApi]);
 
   const handleGenerateDiscountCode = async () => {
     const code = await callDiscountApi(100);
@@ -257,20 +334,37 @@ export function RcartWidget({
   const handleFirstMilestoneClaim = async () => {
     const code = await callDiscountApi(5);
     if (code) setDiscountCode(code);
-    await callNotifyApi('gift', 'First Reward — $15', { price: 5, discountCode: code ?? undefined });
+    await callNotifyApi({
+      id: 'first-reward',
+      icon: 'gift',
+      label: 'First Reward — $15',
+      price: 5,
+      status: 'claimed',
+    });
   };
 
   const handleLastMilestoneClaim = async () => {
     const code = await callDiscountApi(100);
     if (code) setDiscountCode(code);
-    await callNotifyApi('dollar', '$160 Goal Reached', { targetAmount: 160, discountCode: code ?? undefined });
+    await callNotifyApi({
+      id: 'goal-reached',
+      icon: 'dollar',
+      label: '$160 Goal Reached',
+      targetAmount: 160,
+      status: 'claimed',
+    });
   };
 
   // Task 3: send trophy email each time a new game step activity is completed
   useEffect(() => {
     const count = activities?.length ?? 0;
     if (resolvedEmail && count > prevActivityCount.current && prevActivityCount.current > 0) {
-      callNotifyApi('trophy', 'Game step completed');
+      callNotifyApi({
+        id: 'game-step',
+        icon: 'gift',
+        label: 'Game step completed',
+        status: 'earned',
+      });
     }
     prevActivityCount.current = count;
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -302,8 +396,8 @@ export function RcartWidget({
         <>
           <SectionHero
             storeName={storeName}
-            bundleAmount={partnerSettings.rewardGoal?.thresholdAmount ?? rewardAmount}
-            discountAmount={partnerSettings.rewardGoal?.discount}
+            bundleAmount={partnerSettings?.rewardGoal?.thresholdAmount ?? rewardAmount}
+            discountAmount={partnerSettings?.rewardGoal?.discount}
             onCTAClick={gotoGamesPage}
             to="#games"
             heroImageSrc={heroImageSrc}
@@ -312,8 +406,8 @@ export function RcartWidget({
           <SectionPartneredGames
               partnerCode={partnerCode}
               partnerName={storeName}
-              maxIncompleteOffers={partnerSettings.maxIncompleteOffers || 5}       
-              bundleAmount={Number(partnerSettings.rewardGoal?.thresholdAmount) || 0}
+              maxIncompleteOffers={partnerSettings?.maxIncompleteOffers || 5}       
+              bundleAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount) || 0}
               rewardAmount={Number(rewardAmount) || 0}
               activities={activities || []}
               partnerSettings={partnerSettings}
