@@ -34,6 +34,8 @@ export type NotifyMilestonePayload = {
   icon: 'welcome' | 'gift' | 'trophy' | 'star' | 'dollar' | 'reminder';
   label: string;
   price?: number;
+  title?: string;
+  description?: string;
   targetAmount?: number;
   discountCode?: string;
   status: 'locked' | 'earned' | 'claimed';
@@ -45,8 +47,6 @@ const WELCOME_NOTIFY_MILESTONE: NotifyMilestonePayload = {
   label: 'Welcome',
   status: 'earned',
 };
-
-
 
 function isGamesHash(): boolean {
   if (typeof window === 'undefined') return false;
@@ -298,6 +298,8 @@ export function RcartWidget({
             id: milestone.id,
             icon: milestone.icon,
             label: milestone.label,
+            ...(milestone.title != null ? { title: milestone.title } : {}),
+            ...(milestone.description != null ? { description: milestone.description } : {}),
             ...(milestone.price != null ? { price: milestone.price } : {}),
             ...(milestone.targetAmount != null ? { targetAmount: milestone.targetAmount } : {}),
             ...(milestone.discountCode ? { discountCode: milestone.discountCode } : {}),
@@ -349,7 +351,7 @@ export function RcartWidget({
   const handleFirstMilestoneClaim = async () => {
     await callNotifyApi({
       id: 'first-reward',
-      icon: 'gift',
+      icon: 'dollar',
       label: 'First Reward — $15',
       price: 5,
       status: 'claimed',
@@ -365,39 +367,13 @@ export function RcartWidget({
       icon: 'dollar',
       label: '$160 Goal Reached',
       targetAmount: 160,
+      price: 100,
       status: 'claimed',
       discountCode: lastMilestoneDiscountCode || '',
     });
 
     console.log("Last milestone claimed", lastMilestoneDiscountCode);
   };
-
-  // Task 3: send trophy email each time a new game step activity is completed
-  // useEffect(() => {
-  //   const count = activities?.length ?? 0;
-  //   if (resolvedEmail && count > prevActivityCount.current && prevActivityCount.current > 0) {
-  //     callNotifyApi({
-  //       id: 'game-step',
-  //       icon: 'trophy',
-  //       label: 'Game step completed',
-  //       status: 'earned',
-  //     });
-  //   }
-  //   prevActivityCount.current = count;
-  // // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [activities?.length]);
-
-
-  const handleOnInstallGame = () => {
-    callNotifyApi({
-      id: 'game-step',
-      icon: 'trophy',
-      label: 'Game step completed',
-      status: 'earned',
-    });
-    console.log("Game installed!");
-  }
-
 
   return (
     <div>
@@ -561,7 +537,6 @@ export function RcartWidget({
               redirectUrl="/collections/all"
               isLoggedIn={isLoggedIn}
               onClaimFirstMilestone={handleFirstMilestoneClaim}
-              onInstallGame={handleOnInstallGame}
             />
           </div>
         </>

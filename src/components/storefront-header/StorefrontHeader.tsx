@@ -132,9 +132,9 @@ export function StorefrontHeader({
             <ProgressRewards
               partnerName={partnerName}
               milestones={isLoggedIn ? partnerSettings?.milestones : []}
-              rewardAmount={isLoggedIn ? rewardAmount : 0}
-              discountAmount={Number(isLoggedIn ? partnerSettings?.rewardGoal?.discount : 0)}
-              goalAmount={Number(isLoggedIn ? partnerSettings?.rewardGoal?.thresholdAmount : 0)}
+              rewardAmount={rewardAmount || 0}
+              discountAmount={Number(partnerSettings?.rewardGoal?.discount || 0)}
+              goalAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount || 0)}
               code={isLoggedIn ? discountCode : ''}
               onCopyWithRedirect={() => {
                 console.log('Copy with redirect');
