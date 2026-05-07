@@ -45,3 +45,5 @@ extension, and add a container element where you want the widget:
 For a future backend, you can change `src/use-rcart-game-api.ts` to call your
 own app's API instead of the hosted rcart API, without touching the Shopify
 Liquid or the rest of the widget.
+
+https://rcart-api.vercel.app/api/auth?shop=tlts-checkout-dev.myshopify.com

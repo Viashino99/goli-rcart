@@ -7,6 +7,7 @@ export default defineConfig({
   plugins: [react()],
   define: {
     'process.env.NODE_ENV': '"production"',
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
   },
   build: {
     cssCodeSplit: false,

@@ -11,6 +11,11 @@
   {% if block.settings.facebook_pixel_id != blank %}data-facebook-pixel-id="{{ block.settings.facebook_pixel_id | escape }}"{% endif %}
   {% if customer %}data-email="{{ customer.email | escape }}"{% endif %}
   {% if customer %}data-user-id="{{ customer.id | escape }}"{% endif %}
+  {% if block.settings.logo_url != blank %}data-logo-src="{{ block.settings.logo_url | image_url: width: 400 | escape }}"{% endif %}
+  {% if block.settings.hero_image_url != blank %}data-hero-image-src="{{ block.settings.hero_image_url | image_url: width: 1400 | escape }}"{% endif %}
+  {% if block.settings.step_1_image_url != blank %}data-step1-image="{{ block.settings.step_1_image_url | image_url: width: 800 | escape }}"{% endif %}
+  {% if block.settings.step_2_image_url != blank %}data-step2-image="{{ block.settings.step_2_image_url | image_url: width: 800 | escape }}"{% endif %}
+  {% if block.settings.step_3_image_url != blank %}data-step3-image="{{ block.settings.step_3_image_url | image_url: width: 800 | escape }}"{% endif %}
 ></div>
 
 <script src="{{ 'rcart-widget.js' | asset_url }}" defer></script>
@@ -66,6 +71,31 @@
       "id": "facebook_pixel_id",
       "label": "Facebook Pixel ID",
       "info": "Optional. goli-rcart builds normally use VITE_FACEBOOK_PIXEL_ID from .env at vite build. Set this only when the bundle was built without a pixel ID."
+    },
+    {
+      "type": "image_picker",
+      "id": "logo_url",
+      "label": "Brand logo"
+    },
+    {
+      "type": "image_picker",
+      "id": "hero_image_url",
+      "label": "Hero image"
+    },
+    {
+      "type": "image_picker",
+      "id": "step_1_image_url",
+      "label": "Step 1 image"
+    },
+    {
+      "type": "image_picker",
+      "id": "step_2_image_url",
+      "label": "Step 2 image"
+    },
+    {
+      "type": "image_picker",
+      "id": "step_3_image_url",
+      "label": "Step 3 image"
     }
   ]
 }

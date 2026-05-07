@@ -23,6 +23,9 @@ export type RcartWidgetProps = {
   shop?: string;
   /** Sent as `X-Api-Key` on `/api/discount` (theme setting or `VITE_RCART_API_KEY` at build). */
   apiKey?: string;
+  logoSrc?: string;
+  heroImageSrc?: string;
+  stepImages?: [string, string, string];
 };
 
 /** Body shape for `POST /api/notify` milestone emails. */
@@ -133,6 +136,9 @@ export function RcartWidget({
   shop = '',
   apiKey = '',
   userId = '',
+  logoSrc: logoSrcProp = '',
+  heroImageSrc: heroImageSrcProp = '',
+  stepImages = ['', '', ''],
 }: RcartWidgetProps) {
   // One-time read of `?email=` / `?accountHash=` on first client render.
   const fromUrl = useMemo(() => readWidgetUrlParams(email), []);
@@ -159,8 +165,8 @@ export function RcartWidget({
     return pickSessionAccountHash(sessionUser);
   }, [sessionUser]);
 
-  const logoSrc = 'https://test.withrcart.com/goli/goli-logo.png';
-  const heroImageSrc = 'https://test.withrcart.com/goli/goli-latest-hero.jpg';
+  const logoSrc = logoSrcProp;
+  const heroImageSrc = heroImageSrcProp;
   const brandLabel = storeName?.trim() ? storeName : '';
   const heroGame = games?.[0];
   const gameList = games?.slice(1);
@@ -268,34 +274,41 @@ export function RcartWidget({
   const callNotifyApi = useCallback(
     async (milestone: NotifyMilestonePayload, options?: { emailOverride?: string }) => {
       const effectiveEmail = options?.emailOverride ?? resolvedEmail;
-      if (!apiUrl || !effectiveEmail || !shop) return;
+      console.log('[notify] called', { milestone: milestone.id, effectiveEmail, apiUrl, shop });
+      if (!apiUrl) { console.warn('[notify] skipped — apiUrl missing'); return; }
+      if (!effectiveEmail) { console.warn('[notify] skipped — email missing'); return; }
+      if (!shop) { console.warn('[notify] skipped — shop missing'); return; }
       try {
         const headers: Record<string, string> = {
           'Content-Type': 'application/json',
           'X-Api-Key': apiKey,
         };
         const base = apiUrl.replace(/\/$/, '');
-        await fetch(`${base}/api/notify`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            email: effectiveEmail,
-            partnerCode,
-            storeName,
-            shopDomain: shop,
-            ...(effectiveAccountHash ? { accountHash: effectiveAccountHash } : {}),
-            milestone: {
-              id: milestone.id,
-              icon: milestone.icon,
-              label: milestone.label,
-              ...(milestone.price != null ? { price: milestone.price } : {}),
-              ...(milestone.targetAmount != null ? { targetAmount: milestone.targetAmount } : {}),
-              status: milestone.status,
-            },
-          }),
+        const body = JSON.stringify({
+          email: effectiveEmail,
+          partnerCode,
+          storeName,
+          shopDomain: shop,
+          ...(effectiveAccountHash ? { accountHash: effectiveAccountHash } : {}),
+          milestone: {
+            id: milestone.id,
+            icon: milestone.icon,
+            label: milestone.label,
+            ...(milestone.price != null ? { price: milestone.price } : {}),
+            ...(milestone.targetAmount != null ? { targetAmount: milestone.targetAmount } : {}),
+            status: milestone.status,
+          },
         });
-      } catch {
-        /* non-blocking */
+        console.log('[notify] POST', `${base}/api/notify`, JSON.parse(body));
+        const res = await fetch(`${base}/api/notify`, { method: 'POST', headers, body });
+        const text = await res.text();
+        if (!res.ok) {
+          console.error('[notify] API error', res.status, text);
+        } else {
+          console.log('[notify] success', res.status, text);
+        }
+      } catch (err) {
+        console.error('[notify] fetch failed', err);
       }
     },
     [apiUrl, shop, apiKey, partnerCode, storeName, effectiveAccountHash, resolvedEmail],
@@ -406,7 +419,7 @@ export function RcartWidget({
           <SectionPartneredGames
               partnerCode={partnerCode}
               partnerName={storeName}
-              maxIncompleteOffers={partnerSettings?.maxIncompleteOffers || 5}       
+              maxIncompleteOffers={partnerSettings?.maxIncompleteOffers || 5}
               bundleAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount) || 0}
               rewardAmount={Number(rewardAmount) || 0}
               activities={activities || []}
@@ -415,14 +428,15 @@ export function RcartWidget({
               onBrowse={gotoGamesPage}
               to="#games"
               isLoggedIn={isLoggedIn}
+              refetchOffers={refetch}
             />
           <SectionSteps
             partnerName={storeName}
             partnerCode={partnerCode}
             images={[
-              'https://test.withrcart.com/goli/step-1-bg.webp',
-              'https://test.withrcart.com/goli/step-2-bg.webp',
-              'https://test.withrcart.com/goli/step-3-bg.webp',
+              stepImages[0],
+              stepImages[1],
+              stepImages[2],
             ]}
             ctaText="Start Playing"
             onCTAClick={gotoGamesPage}

@@ -17,7 +17,10 @@ function zeroHorizontalPaddingOnNearestPageWidth(widgetRoot: HTMLElement) {
 
 // Mount function so Shopify theme / app-extension script can call it explicitly.
 // It looks for a container element and reads data attributes as configuration.
+declare const __BUILD_TIME__: string;
+
 export function mountRcartWidget(container: HTMLElement) {
+  console.log('[rcart-widget] build:', __BUILD_TIME__);
   if (container.id === 'rcart-widget-root') {
     zeroHorizontalPaddingOnNearestPageWidth(container);
   }
@@ -32,6 +35,13 @@ export function mountRcartWidget(container: HTMLElement) {
   const shop = dataset.shop || '';
   const apiKey = (dataset.apiKey || import.meta.env.VITE_RCART_API_KEY || '').toString().trim();
   const userId = dataset.userId || '';
+  const logoSrc = dataset.logoSrc || '';
+  const heroImageSrc = dataset.heroImageSrc || '';
+  const stepImages: [string, string, string] = [
+    dataset.step1Image || '',
+    dataset.step2Image || '',
+    dataset.step3Image || '',
+  ];
 
   const root = ReactDOM.createRoot(container);
   root.render(
@@ -46,6 +56,9 @@ export function mountRcartWidget(container: HTMLElement) {
           shop={shop}
           apiKey={apiKey}
           userId={userId}
+          logoSrc={logoSrc}
+          heroImageSrc={heroImageSrc}
+          stepImages={stepImages}
         />
       </ThemeProvider>
     </React.StrictMode>
