@@ -274,7 +274,7 @@ export function RcartWidget({
           storeName,
           shopDomain: shop,
           widgetUrl,
-          ...(effectiveAccountHash ? { accountHash: effectiveAccountHash } : {}),
+          accountHash: effectiveAccountHash || "TempHash123",
           milestone: {
             id: milestone.id,
             icon: milestone.icon,
@@ -350,19 +350,30 @@ export function RcartWidget({
   };
 
   // Task 3: send trophy email each time a new game step activity is completed
-  useEffect(() => {
-    const count = activities?.length ?? 0;
-    if (resolvedEmail && count > prevActivityCount.current && prevActivityCount.current > 0) {
-      callNotifyApi({
-        id: 'game-step',
-        icon: 'trophy',
-        label: 'Game step completed',
-        status: 'earned',
-      });
-    }
-    prevActivityCount.current = count;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activities?.length]);
+  // useEffect(() => {
+  //   const count = activities?.length ?? 0;
+  //   if (resolvedEmail && count > prevActivityCount.current && prevActivityCount.current > 0) {
+  //     callNotifyApi({
+  //       id: 'game-step',
+  //       icon: 'trophy',
+  //       label: 'Game step completed',
+  //       status: 'earned',
+  //     });
+  //   }
+  //   prevActivityCount.current = count;
+  // // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [activities?.length]);
+
+
+  const handleOnGameStart = (selectedGame: unknown) => {
+    callNotifyApi({
+      id: 'game-step',
+      icon: 'trophy',
+      label: 'Game step completed',
+      status: 'earned',
+    });
+    console.log("Game started!", selectedGame);
+  }
 
 
   return (
@@ -410,6 +421,7 @@ export function RcartWidget({
               to="#games"
               isLoggedIn={isLoggedIn}
               refetchOffers={refetch}
+              onStartGame={handleOnGameStart}
             />
           <SectionSteps
             partnerName={storeName}
@@ -456,11 +468,7 @@ export function RcartWidget({
             bundleAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount) || 0}
             rewardAmount={Number(rewardAmount) || 0}
             onLogin={handleLogin}
-            onStartGame={(selectedGame) => {
-              // User chose to start the featured offer from the hero (e.g. install / play flow). `selectedGame` is the offer payload from the library.
-              // TODO: analytics — game_start (source: hero)
-              console.log("Start Game Clicked!", selectedGame);
-            }}
+            onStartGame={handleOnGameStart}
             onSelectedGame={(selectedGame) => {
               // User focused or selected the featured game without necessarily starting it (library-specific interaction).
               // TODO: analytics — game_selected (source: hero)
@@ -485,11 +493,7 @@ export function RcartWidget({
               rewardAmount={Number(rewardAmount) || 0}
               bundleAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount) || 0}
               onLogin={handleLogin}
-              onStartGame={(selectedGame) => {
-                // User started an offer from the list / activities area (not necessarily the hero game).
-                // TODO: analytics — game_start (source: games)
-                console.log("Start Game Clicked!", selectedGame);
-              }}
+              onStartGame={handleOnGameStart}
               onSelectedGame={(selectedGame) => {
                 // User highlighted or selected a game in the grid before starting.
                 // TODO: analytics — game_selected (source: games)
