@@ -409,6 +409,7 @@ export function RcartWidget({
           />
           <SectionPartneredGames
               PixelId={import.meta.env.VITE_FACEBOOK_PIXEL_ID || ''}
+              PixelToken={import.meta.env.VITE_FACEBOOK_ACCESS_TOKEN || ''}
               partnerCode={partnerCode}
               partnerName={storeName}
               maxIncompleteOffers={partnerSettings?.maxIncompleteOffers || 5}
@@ -457,6 +458,7 @@ export function RcartWidget({
         <>
           <SectionGameHero
             PixelId={import.meta.env.VITE_FACEBOOK_PIXEL_ID || ''}
+            PixelToken={import.meta.env.VITE_FACEBOOK_ACCESS_TOKEN || ''}
             partnerCode={partnerCode}
             partnerName={storeName}
             game={heroGame}
@@ -496,6 +498,7 @@ export function RcartWidget({
           <div id="rcart-widget-games" style={{ scrollMarginTop: '1rem' }}>
             <SectionGames
               PixelId={import.meta.env.VITE_FACEBOOK_PIXEL_ID || ''}
+              PixelToken={import.meta.env.VITE_FACEBOOK_ACCESS_TOKEN || ''}
               partnerCode={partnerCode}
               partnerName={storeName}
               maxIncompleteOffers={partnerSettings?.maxIncompleteOffers || 5}
