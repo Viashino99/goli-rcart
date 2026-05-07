@@ -70,6 +70,23 @@ function pickSessionAccountHash(sessionUser: unknown): string | null {
   return t.length > 0 ? t : null;
 }
 
+/** API: id 1 = install / surprise gift ($5), id 2 = bundle goal ($100). Falls back to matching `targetAmount` to `rewardGoal`. */
+function earnedMilestoneTier(
+  m: { id?: unknown; targetAmount?: unknown },
+  rewardGoal?: { targetAmount?: unknown; thresholdAmount?: unknown },
+): 'install' | 'bundle' | null {
+  const id = Number(m.id);
+  if (id === 1) return 'install';
+  if (id === 2) return 'bundle';
+
+  const smallGoal = Number(rewardGoal?.targetAmount);
+  const bigGoal = Number(rewardGoal?.thresholdAmount);
+  const t = Number(m.targetAmount);
+  if (t === smallGoal) return 'install';
+  if (t === bigGoal) return 'bundle';
+  return null;
+}
+
 /**
  * Reads `?email=` / `?accountHash=` once at mount.
  * - No `email` or `accountHash` query keys → use Shopify/Liquid customer email only (never force empty).
@@ -151,6 +168,8 @@ export function RcartWidget({
   const brandLabel = storeName?.trim() ? storeName : '';
   const heroGame = games?.[0];
   const gameList = games?.slice(1);
+  const [firstMilestoneDiscountCode, setFirstMilestoneDiscountCode] = useState<string | null>(null);
+  const [lastMilestoneDiscountCode, setLastMilestoneDiscountCode] = useState<string | null>(null);
 
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(!!fromUrl.email);
 
@@ -313,40 +332,44 @@ export function RcartWidget({
 
 
   const handleGenerateDiscountCode = async () => {
-    const milestones = partnerSettings?.milestones ?? [];
-    const earnedMilestone = milestones.find(m => m.status === 'earned');
-    const amount: 5 | 100 = earnedMilestone?.price === 5 ? 5 : 100;
-    const code = await callDiscountApi(amount);
-    if (code) {
-      setDiscountCode(code);
-    } else {
-      setDiscountCode('TEST_CODE123');
-    }
+    const earned = partnerSettings?.milestones?.find((m) => m.status === 'earned');
+    if (!earned) return;
+
+    const tier = earnedMilestoneTier(earned, partnerSettings?.rewardGoal ?? undefined);
+    if (!tier) return;
+
+    const discountAmount: 5 | 100 = tier === 'install' ? 5 : 100;
+    const code = await callDiscountApi(discountAmount);
+    if (!code) return;
+
+    if (tier === 'install') setFirstMilestoneDiscountCode(code);
+    else setLastMilestoneDiscountCode(code);
   };
 
   const handleFirstMilestoneClaim = async () => {
-    const code = await callDiscountApi(5);
-    if (code) setDiscountCode(code);
     await callNotifyApi({
       id: 'first-reward',
       icon: 'gift',
       label: 'First Reward — $15',
       price: 5,
       status: 'claimed',
+      discountCode: firstMilestoneDiscountCode || '',
     });
+
+    console.log("First milestone claimed", firstMilestoneDiscountCode);
   };
 
   const handleLastMilestoneClaim = async () => {
-    const code = await callDiscountApi(100);
-    if (code) setDiscountCode(code);
     await callNotifyApi({
       id: 'goal-reached',
       icon: 'dollar',
       label: '$160 Goal Reached',
       targetAmount: 160,
       status: 'claimed',
-      ...(code ? { discountCode: code } : {}),
+      discountCode: lastMilestoneDiscountCode || '',
     });
+
+    console.log("Last milestone claimed", lastMilestoneDiscountCode);
   };
 
   // Task 3: send trophy email each time a new game step activity is completed
@@ -365,14 +388,14 @@ export function RcartWidget({
   // }, [activities?.length]);
 
 
-  const handleOnGameStart = (selectedGame: unknown) => {
+  const handleOnInstallGame = () => {
     callNotifyApi({
       id: 'game-step',
       icon: 'trophy',
       label: 'Game step completed',
       status: 'earned',
     });
-    console.log("Game started!", selectedGame);
+    console.log("Game installed!");
   }
 
 
@@ -422,7 +445,11 @@ export function RcartWidget({
               to="#games"
               isLoggedIn={isLoggedIn}
               refetchOffers={refetch}
-              onStartGame={handleOnGameStart}
+              onStartGame={(selectedGame) => {
+                // User clicked the game CTA in the partnered games grid.
+                // TODO: analytics — game_start (source: partnered games)
+                console.log("Game Started!", selectedGame);
+              }}
             />
           <SectionSteps
             partnerName={storeName}
@@ -470,7 +497,11 @@ export function RcartWidget({
             bundleAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount) || 0}
             rewardAmount={Number(rewardAmount) || 0}
             onLogin={handleLogin}
-            onStartGame={handleOnGameStart}
+            onStartGame={(selectedGame) => {
+              // User clicked the game CTA in the partnered games grid.
+              // TODO: analytics — game_start (source: partnered games)
+              console.log("Game Started!", selectedGame);
+            }}
             onSelectedGame={(selectedGame) => {
               // User focused or selected the featured game without necessarily starting it (library-specific interaction).
               // TODO: analytics — game_selected (source: hero)
@@ -496,7 +527,11 @@ export function RcartWidget({
               rewardAmount={Number(rewardAmount) || 0}
               bundleAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount) || 0}
               onLogin={handleLogin}
-              onStartGame={handleOnGameStart}
+              onStartGame={(selectedGame) => {
+                // User clicked the game CTA in the games grid.
+                // TODO: analytics — game_start (source: games)
+                console.log("Game Started!", selectedGame);
+              }}
               onSelectedGame={(selectedGame) => {
                 // User highlighted or selected a game in the grid before starting.
                 // TODO: analytics — game_selected (source: games)
@@ -525,6 +560,8 @@ export function RcartWidget({
               onGenerateDiscountCode={handleGenerateDiscountCode}
               redirectUrl="/collections/all"
               isLoggedIn={isLoggedIn}
+              onClaimFirstMilestone={handleFirstMilestoneClaim}
+              onInstallGame={handleOnInstallGame}
             />
           </div>
         </>
