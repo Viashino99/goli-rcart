@@ -31,41 +31,22 @@ export type RcartWidgetProps = {
 /** Body shape for `POST /api/notify` milestone emails. */
 export type NotifyMilestonePayload = {
   id: string;
-  icon: 'gift' | 'dollar';
+  icon: 'welcome' | 'gift' | 'trophy' | 'star' | 'dollar' | 'reminder';
   label: string;
   price?: number;
   targetAmount?: number;
+  discountCode?: string;
   status: 'locked' | 'earned' | 'claimed';
 };
 
 const WELCOME_NOTIFY_MILESTONE: NotifyMilestonePayload = {
   id: 'welcome',
-  icon: 'gift',
+  icon: 'welcome',
   label: 'Welcome',
   status: 'earned',
 };
 
-function welcomeNotifyStorageKey(email: string): string {
-  return `rcart:welcomeNotify:v1:${email.trim().toLowerCase()}`;
-}
 
-function hasWelcomeNotifyHandled(email: string): boolean {
-  if (typeof window === 'undefined') return true;
-  try {
-    return window.localStorage.getItem(welcomeNotifyStorageKey(email)) === '1';
-  } catch {
-    return true;
-  }
-}
-
-function markWelcomeNotifyHandled(email: string): void {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(welcomeNotifyStorageKey(email), '1');
-  } catch {
-    /* ignore */
-  }
-}
 
 function isGamesHash(): boolean {
   if (typeof window === 'undefined') return false;
@@ -284,11 +265,15 @@ export function RcartWidget({
           'X-Api-Key': apiKey,
         };
         const base = apiUrl.replace(/\/$/, '');
+        const widgetUrl = typeof window !== 'undefined'
+          ? `${window.location.origin}${window.location.pathname}`
+          : '';
         const body = JSON.stringify({
           email: effectiveEmail,
           partnerCode,
           storeName,
           shopDomain: shop,
+          widgetUrl,
           ...(effectiveAccountHash ? { accountHash: effectiveAccountHash } : {}),
           milestone: {
             id: milestone.id,
@@ -296,6 +281,7 @@ export function RcartWidget({
             label: milestone.label,
             ...(milestone.price != null ? { price: milestone.price } : {}),
             ...(milestone.targetAmount != null ? { targetAmount: milestone.targetAmount } : {}),
+            ...(milestone.discountCode ? { discountCode: milestone.discountCode } : {}),
             status: milestone.status,
           },
         });
@@ -323,20 +309,14 @@ export function RcartWidget({
     setIsLoggedIn(true);
     gotoGamesPage?.();
     void callNotifyApi(WELCOME_NOTIFY_MILESTONE, { emailOverride: submittedEmail });
-    markWelcomeNotifyHandled(submittedEmail);
   };
 
-  // Shopify Liquid session or restored getjacked session: same welcome notify as manual login (once per email in this browser).
-  useEffect(() => {
-    if (!resolvedEmail || !isLoggedIn || !isPlausibleEmail(resolvedEmail)) return;
-    if (!apiUrl || !shop) return;
-    if (hasWelcomeNotifyHandled(resolvedEmail)) return;
-    markWelcomeNotifyHandled(resolvedEmail);
-    void callNotifyApi(WELCOME_NOTIFY_MILESTONE, { emailOverride: resolvedEmail });
-  }, [resolvedEmail, isLoggedIn, apiUrl, shop, callNotifyApi]);
 
   const handleGenerateDiscountCode = async () => {
-    const code = await callDiscountApi(100);
+    const milestones = partnerSettings?.milestones ?? [];
+    const earnedMilestone = milestones.find(m => m.status === 'earned');
+    const amount: 5 | 100 = earnedMilestone?.price === 5 ? 5 : 100;
+    const code = await callDiscountApi(amount);
     if (code) {
       setDiscountCode(code);
     } else {
@@ -365,6 +345,7 @@ export function RcartWidget({
       label: '$160 Goal Reached',
       targetAmount: 160,
       status: 'claimed',
+      ...(code ? { discountCode: code } : {}),
     });
   };
 
@@ -374,7 +355,7 @@ export function RcartWidget({
     if (resolvedEmail && count > prevActivityCount.current && prevActivityCount.current > 0) {
       callNotifyApi({
         id: 'game-step',
-        icon: 'gift',
+        icon: 'trophy',
         label: 'Game step completed',
         status: 'earned',
       });
