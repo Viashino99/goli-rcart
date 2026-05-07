@@ -409,6 +409,7 @@ export function RcartWidget({
             className={styles.goliHeroSection}
           />
           <SectionPartneredGames
+              PixelId={import.meta.env.VITE_FACEBOOK_PIXEL_ID || ''}
               partnerCode={partnerCode}
               partnerName={storeName}
               maxIncompleteOffers={partnerSettings?.maxIncompleteOffers || 5}
@@ -452,6 +453,7 @@ export function RcartWidget({
       ) : showPage === 'games' ? (
         <>
           <SectionGameHero
+            PixelId={import.meta.env.VITE_FACEBOOK_PIXEL_ID || ''}
             partnerCode={partnerCode}
             partnerName={storeName}
             game={heroGame}
@@ -486,6 +488,7 @@ export function RcartWidget({
 
           <div id="rcart-widget-games" style={{ scrollMarginTop: '1rem' }}>
             <SectionGames
+              PixelId={import.meta.env.VITE_FACEBOOK_PIXEL_ID || ''}
               partnerCode={partnerCode}
               partnerName={storeName}
               maxIncompleteOffers={partnerSettings?.maxIncompleteOffers || 5}
