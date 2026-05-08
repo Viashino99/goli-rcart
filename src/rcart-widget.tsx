@@ -252,6 +252,7 @@ export function RcartWidget({
         method: 'POST',
         headers,
         body: JSON.stringify({
+          userId,
           email: resolvedEmail,
           partnerCode: partnerCode,
           shop: shop,
@@ -286,6 +287,7 @@ export function RcartWidget({
           ? `${window.location.origin}${window.location.pathname}`
           : '';
         const body = JSON.stringify({
+          userId,
           email: effectiveEmail,
           partnerCode,
           storeName,
@@ -316,7 +318,7 @@ export function RcartWidget({
         console.error('[notify] fetch failed', err);
       }
     },
-    [apiUrl, shop, apiKey, partnerCode, storeName, effectiveAccountHash, resolvedEmail],
+    [apiUrl, shop, apiKey, partnerCode, storeName, effectiveAccountHash, resolvedEmail, userId],
   );
 
   // Stable ref so the welcome-email effect always calls the latest callNotifyApi.
@@ -347,13 +349,13 @@ export function RcartWidget({
   };
 
 
-  const handleGenerateDiscountCode = async (): Promise<string | null> => {
-    // Sort ascending by targetAmount so the smaller (install) milestone is always found first
-    // when both milestones happen to be earned simultaneously or the API returns them out of order.
+  const generateCodeForTier = async (preferHighest: boolean): Promise<string | null> => {
     const sorted = [...((partnerSettings?.milestones as any[]) ?? [])].sort(
       (a, b) => Number(a.targetAmount ?? 0) - Number(b.targetAmount ?? 0),
     );
-    const earned = sorted.find((m) => m.status === 'earned');
+    const earned = preferHighest
+      ? [...sorted].reverse().find((m) => m.status === 'earned')
+      : sorted.find((m) => m.status === 'earned');
     if (!earned) return null;
 
     const tier = earnedMilestoneTier(earned, partnerSettings?.rewardGoal ?? undefined);
@@ -363,11 +365,9 @@ export function RcartWidget({
     const code = await callDiscountApi(discountAmount);
     if (!code) return null;
 
-    // Update shared state so StorefrontHeader/SectionGames re-render with the code,
-    // and return it so ModalSurpriseGift/ProgressRewards can display it immediately.
     setDiscountCode(code);
+    void refetch();
 
-    // Use the ref so we always call the latest callNotifyApi regardless of closure age.
     if (tier === 'install') {
       void callNotifyApiRef.current({
         id: 'first-reward',
@@ -391,6 +391,11 @@ export function RcartWidget({
     return code;
   };
 
+  // SectionGames → ModalSurpriseGift (JM): called for the install/first ($5) milestone.
+  const handleGenerateDiscountCode = () => generateCodeForTier(false);
+  // StorefrontHeader → ProgressRewards → Xl: called only when the bundle ($100) milestone is earned.
+  const handleGenerateBundleCode = () => generateCodeForTier(true);
+
   // These are called by ProgressRewards / ModalSurpriseGift when the user clicks
   // "Copy Code & Shop Now". Email is already sent in handleGenerateDiscountCode above.
   const handleFirstMilestoneClaim = () => {};
@@ -410,7 +415,7 @@ export function RcartWidget({
         partnerSettings={partnerSettings}
         discountCode={discountCode || ""}
         onLogout={handleLogout}
-        onGenerateDiscountCode={handleGenerateDiscountCode}
+        onGenerateDiscountCode={handleGenerateBundleCode}
         onClaimFirstMilestone={handleFirstMilestoneClaim}
         onClaimLastMilestone={handleLastMilestoneClaim}
         islanding={showPage === 'landing' ? true : false}
