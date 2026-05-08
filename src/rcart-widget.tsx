@@ -70,7 +70,7 @@ function pickSessionAccountHash(sessionUser: unknown): string | null {
   return t.length > 0 ? t : null;
 }
 
-/** API: id 1 = install / surprise gift ($5), id 2 = bundle goal ($100). Falls back to matching `targetAmount` to `rewardGoal`. */
+/** API: id 1 = install / surprise gift ($5), id 2 = bundle goal ($100). Falls back to comparing targetAmount against the bundle threshold. */
 function earnedMilestoneTier(
   m: { id?: unknown; targetAmount?: unknown },
   rewardGoal?: { targetAmount?: unknown; thresholdAmount?: unknown },
@@ -79,11 +79,11 @@ function earnedMilestoneTier(
   if (id === 1) return 'install';
   if (id === 2) return 'bundle';
 
-  const smallGoal = Number(rewardGoal?.targetAmount);
-  const bigGoal = Number(rewardGoal?.thresholdAmount);
   const t = Number(m.targetAmount);
-  if (t === smallGoal) return 'install';
-  if (t === bigGoal) return 'bundle';
+  const bigGoal = Number(rewardGoal?.thresholdAmount);
+  if (!isNaN(t) && !isNaN(bigGoal) && bigGoal > 0) {
+    return t < bigGoal ? 'install' : 'bundle';
+  }
   return null;
 }
 
@@ -146,7 +146,8 @@ export function RcartWidget({
     isGamesHash() ? 'games' : 'landing',
   );
   const [discountCode, setDiscountCode] = useState<string | null>(null);
-  const prevActivityCount = useRef<number>(0);
+  const prevMilestonesRef = useRef<Array<{ id: string; status: string }>>([]);
+  const pendingWelcomeEmailRef = useRef(false);
 
   const { logout } = useLogout();
   const { games, activities, partnerSettings, rewardAmount, loading, error,sessionUser, refetch } = useRcartGameApi({
@@ -168,8 +169,6 @@ export function RcartWidget({
   const brandLabel = storeName?.trim() ? storeName : '';
   const heroGame = games?.[0];
   const gameList = games?.slice(1);
-  const [firstMilestoneDiscountCode, setFirstMilestoneDiscountCode] = useState<string | null>(null);
-  const [lastMilestoneDiscountCode, setLastMilestoneDiscountCode] = useState<string | null>(null);
 
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(!!fromUrl.email);
 
@@ -293,7 +292,7 @@ export function RcartWidget({
           storeName,
           shopDomain: shop,
           widgetUrl,
-          accountHash: effectiveAccountHash || "TempHash123",
+          ...(effectiveAccountHash ? { accountHash: effectiveAccountHash } : {}),
           milestone: {
             id: milestone.id,
             icon: milestone.icon,
@@ -321,6 +320,60 @@ export function RcartWidget({
     [apiUrl, shop, apiKey, partnerCode, storeName, effectiveAccountHash, resolvedEmail],
   );
 
+  // Stable ref so the milestone-tracking effect always calls the latest version
+  // without re-running every time callNotifyApi's dependencies change.
+  const callNotifyApiRef = useRef(callNotifyApi);
+  useEffect(() => { callNotifyApiRef.current = callNotifyApi; });
+
+  // Detect milestone status transitions to 'earned' (i.e. postback confirmed by backend)
+  // and send the earned notification. Fires only on actual status changes, never on mount.
+  useEffect(() => {
+    const milestones: Array<{ id: string; status: string; targetAmount?: number }> =
+      (partnerSettings?.milestones as any[]) ?? [];
+    const prev = prevMilestonesRef.current;
+
+    if (prev.length > 0 && resolvedEmail) {
+      for (const m of milestones) {
+        const prevStatus = prev.find(p => p.id === m.id)?.status;
+        if (prevStatus && prevStatus !== 'earned' && m.status === 'earned') {
+          const tier = earnedMilestoneTier(m, partnerSettings?.rewardGoal ?? undefined);
+          // icon + fields must match the API template table:
+          // gift  → first reward earned  → label, price (no discountCode)
+          // dollar → $100 goal reached   → label, targetAmount (discountCode optional)
+          if (tier === 'install') {
+            void callNotifyApiRef.current({
+              id: m.id,
+              icon: 'gift',
+              label: 'Surprise Gift — $5 off',
+              price: 5,
+              status: 'earned',
+            });
+          } else if (tier === 'bundle') {
+            void callNotifyApiRef.current({
+              id: m.id,
+              icon: 'dollar',
+              label: 'Bundle Goal Reached — $100 off',
+              targetAmount: 100,
+              status: 'earned',
+            });
+          }
+        }
+      }
+    }
+
+    prevMilestonesRef.current = milestones.map(m => ({ id: m.id, status: m.status }));
+  }, [partnerSettings?.milestones, resolvedEmail]);
+
+  // Send the welcome email once accountHash is available so the CTA button has a valid link.
+  // pendingWelcomeEmailRef is set in handleLogin (never on session restore), so this
+  // won't fire for returning visitors who already have a session.
+  useEffect(() => {
+    if (!pendingWelcomeEmailRef.current) return;
+    if (!resolvedEmail || !effectiveAccountHash) return;
+    pendingWelcomeEmailRef.current = false;
+    void callNotifyApiRef.current(WELCOME_NOTIFY_MILESTONE);
+  }, [resolvedEmail, effectiveAccountHash]);
+
   const handleLogin = (submittedEmail: string) => {
     // TODO: Add shopify login logic to login the user and then set the resolvedEmail
     pixel.fbTracker('Complete Registration', {
@@ -329,51 +382,60 @@ export function RcartWidget({
     setResolvedEmail(submittedEmail);
     setIsLoggedIn(true);
     gotoGamesPage?.();
-    void callNotifyApi(WELCOME_NOTIFY_MILESTONE, { emailOverride: submittedEmail });
+    // Mark welcome email as pending — sent by the effect below once accountHash is ready,
+    // so the CTA button in the email has a valid magic link.
+    pendingWelcomeEmailRef.current = true;
   };
 
 
-  const handleGenerateDiscountCode = async () => {
-    const earned = partnerSettings?.milestones?.find((m) => m.status === 'earned');
-    if (!earned) return;
+  const handleGenerateDiscountCode = async (): Promise<string | null> => {
+    // Sort ascending by targetAmount so the smaller (install) milestone is always found first
+    // when both milestones happen to be earned simultaneously or the API returns them out of order.
+    const sorted = [...((partnerSettings?.milestones as any[]) ?? [])].sort(
+      (a, b) => Number(a.targetAmount ?? 0) - Number(b.targetAmount ?? 0),
+    );
+    const earned = sorted.find((m) => m.status === 'earned');
+    if (!earned) return null;
 
     const tier = earnedMilestoneTier(earned, partnerSettings?.rewardGoal ?? undefined);
-    if (!tier) return;
+    if (!tier) return null;
 
     const discountAmount: 5 | 100 = tier === 'install' ? 5 : 100;
     const code = await callDiscountApi(discountAmount);
-    if (!code) return;
+    if (!code) return null;
 
-    if (tier === 'install') setFirstMilestoneDiscountCode(code);
-    else setLastMilestoneDiscountCode(code);
+    // Update shared state so StorefrontHeader/SectionGames re-render with the code,
+    // and return it so ModalSurpriseGift/ProgressRewards can display it immediately.
+    setDiscountCode(code);
+
+    // Send claimed notification here — this fires on "tap and hold to claim" (the moment
+    // the user actively claims the reward), not on the later "Copy Code & Shop Now" button.
+    if (tier === 'install') {
+      void callNotifyApi({
+        id: 'first-reward',
+        icon: 'gift',
+        label: 'Surprise Gift — $5 off',
+        price: 5,
+        status: 'claimed',
+      });
+    } else {
+      void callNotifyApi({
+        id: 'goal-reached',
+        icon: 'dollar',
+        label: 'Bundle Goal Reached — $100 off',
+        targetAmount: 100,
+        status: 'claimed',
+        discountCode: code,
+      });
+    }
+
+    return code;
   };
 
-  const handleFirstMilestoneClaim = async () => {
-    await callNotifyApi({
-      id: 'first-reward',
-      icon: 'dollar',
-      label: 'First Reward — $15',
-      price: 5,
-      status: 'claimed',
-      discountCode: firstMilestoneDiscountCode || '',
-    });
-
-    console.log("First milestone claimed", firstMilestoneDiscountCode);
-  };
-
-  const handleLastMilestoneClaim = async () => {
-    await callNotifyApi({
-      id: 'goal-reached',
-      icon: 'dollar',
-      label: '$160 Goal Reached',
-      targetAmount: 160,
-      price: 100,
-      status: 'claimed',
-      discountCode: lastMilestoneDiscountCode || '',
-    });
-
-    console.log("Last milestone claimed", lastMilestoneDiscountCode);
-  };
+  // These are called by ProgressRewards / ModalSurpriseGift when the user clicks
+  // "Copy Code & Shop Now". Email is already sent in handleGenerateDiscountCode above.
+  const handleFirstMilestoneClaim = () => {};
+  const handleLastMilestoneClaim = () => {};
 
   return (
     <div>

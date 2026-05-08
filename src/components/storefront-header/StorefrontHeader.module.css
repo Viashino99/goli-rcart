@@ -1,4 +1,6 @@
-div:empty {
+/* Prevent Shopify theme rules from hiding empty divs inside the header top bar.
+   Scoped to .topBar so it doesn't affect ProgressRewards internal layout. */
+.topBar div:empty {
   display: inherit!important;
 }
 .goliHeroSection img {
@@ -62,8 +64,7 @@ div:empty {
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    width: auto;
-    max-width: min(560px, 42vw);
+    width: min(560px, 42vw);
     pointer-events: auto;
   }
 
