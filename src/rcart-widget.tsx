@@ -146,7 +146,6 @@ export function RcartWidget({
     isGamesHash() ? 'games' : 'landing',
   );
   const [discountCode, setDiscountCode] = useState<string | null>(null);
-  const prevMilestonesRef = useRef<Array<{ id: string; status: string }>>([]);
   const pendingWelcomeEmailRef = useRef(false);
 
   const { logout } = useLogout();
@@ -320,49 +319,9 @@ export function RcartWidget({
     [apiUrl, shop, apiKey, partnerCode, storeName, effectiveAccountHash, resolvedEmail],
   );
 
-  // Stable ref so the milestone-tracking effect always calls the latest version
-  // without re-running every time callNotifyApi's dependencies change.
+  // Stable ref so the welcome-email effect always calls the latest callNotifyApi.
   const callNotifyApiRef = useRef(callNotifyApi);
   useEffect(() => { callNotifyApiRef.current = callNotifyApi; });
-
-  // Detect milestone status transitions to 'earned' (i.e. postback confirmed by backend)
-  // and send the earned notification. Fires only on actual status changes, never on mount.
-  useEffect(() => {
-    const milestones: Array<{ id: string; status: string; targetAmount?: number }> =
-      (partnerSettings?.milestones as any[]) ?? [];
-    const prev = prevMilestonesRef.current;
-
-    if (prev.length > 0 && resolvedEmail) {
-      for (const m of milestones) {
-        const prevStatus = prev.find(p => p.id === m.id)?.status;
-        if (prevStatus && prevStatus !== 'earned' && m.status === 'earned') {
-          const tier = earnedMilestoneTier(m, partnerSettings?.rewardGoal ?? undefined);
-          // icon + fields must match the API template table:
-          // gift  → first reward earned  → label, price (no discountCode)
-          // dollar → $100 goal reached   → label, targetAmount (discountCode optional)
-          if (tier === 'install') {
-            void callNotifyApiRef.current({
-              id: m.id,
-              icon: 'gift',
-              label: 'Surprise Gift — $5 off',
-              price: 5,
-              status: 'earned',
-            });
-          } else if (tier === 'bundle') {
-            void callNotifyApiRef.current({
-              id: m.id,
-              icon: 'dollar',
-              label: 'Bundle Goal Reached — $100 off',
-              targetAmount: 100,
-              status: 'earned',
-            });
-          }
-        }
-      }
-    }
-
-    prevMilestonesRef.current = milestones.map(m => ({ id: m.id, status: m.status }));
-  }, [partnerSettings?.milestones, resolvedEmail]);
 
   // Send the welcome email once accountHash is available so the CTA button has a valid link.
   // pendingWelcomeEmailRef is set in handleLogin (never on session restore), so this
@@ -404,23 +363,22 @@ export function RcartWidget({
     const code = await callDiscountApi(discountAmount);
     if (!code) return null;
 
-<<<<<<< HEAD
     // Update shared state so StorefrontHeader/SectionGames re-render with the code,
     // and return it so ModalSurpriseGift/ProgressRewards can display it immediately.
     setDiscountCode(code);
 
-    // Send claimed notification here — this fires on "tap and hold to claim" (the moment
-    // the user actively claims the reward), not on the later "Copy Code & Shop Now" button.
+    // Use the ref so we always call the latest callNotifyApi regardless of closure age.
     if (tier === 'install') {
-      void callNotifyApi({
+      void callNotifyApiRef.current({
         id: 'first-reward',
-        icon: 'gift',
+        icon: 'dollar',
         label: 'Surprise Gift — $5 off',
-        price: 5,
+        targetAmount: 5,
         status: 'claimed',
+        discountCode: code,
       });
     } else {
-      void callNotifyApi({
+      void callNotifyApiRef.current({
         id: 'goal-reached',
         icon: 'dollar',
         label: 'Bundle Goal Reached — $100 off',
@@ -431,16 +389,6 @@ export function RcartWidget({
     }
 
     return code;
-=======
-    if (tier === 'install') {
-      setDiscountCode(code);
-      setFirstMilestoneDiscountCode(code);
-    }
-    else {
-      setDiscountCode(code);
-      setLastMilestoneDiscountCode(code);
-    }
->>>>>>> 30d8c38b1cdfa4421c08024ceaa75e57d6bfb5da
   };
 
   // These are called by ProgressRewards / ModalSurpriseGift when the user clicks
