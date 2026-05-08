@@ -149,7 +149,7 @@ export function RcartWidget({
   const pendingWelcomeEmailRef = useRef(false);
 
   const { logout } = useLogout();
-  const { games, activities, partnerSettings, rewardAmount, loading, error,sessionUser, refetch } = useRcartGameApi({
+  const { games, activities, partnerSettings, rewardAmount, loading, error,sessionUser ,isNew , refetch } = useRcartGameApi({
     partnerCode,
     email: resolvedEmail,
   });
@@ -332,8 +332,10 @@ export function RcartWidget({
     if (!pendingWelcomeEmailRef.current) return;
     if (!resolvedEmail || !effectiveAccountHash) return;
     pendingWelcomeEmailRef.current = false;
+    console.log("check-isNew: ", isNew);
+    if (isNew !== true) return;
     void callNotifyApiRef.current(WELCOME_NOTIFY_MILESTONE);
-  }, [resolvedEmail, effectiveAccountHash]);
+  }, [resolvedEmail, effectiveAccountHash, isNew]);
 
   const handleLogin = (submittedEmail: string) => {
     // TODO: Add shopify login logic to login the user and then set the resolvedEmail
@@ -563,6 +565,7 @@ export function RcartWidget({
               refetchOffers={refetch}
               discountCode={discountCode || ""}
               onGenerateDiscountCode={handleGenerateDiscountCode}
+              onGenerateDiscountCodeBundle={handleGenerateBundleCode}
               redirectUrl="/collections/all"
               isLoggedIn={isLoggedIn}
               onClaimFirstMilestone={handleFirstMilestoneClaim}
