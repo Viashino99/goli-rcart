@@ -169,6 +169,9 @@ export function RcartWidget({
   const heroGame = games?.[0];
   const gameList = games?.slice(1);
 
+  const facebookPixelId = pixel.getFacebookPixelId() ?? '';
+  const facebookAccessToken = pixel.getFacebookAccessToken() ?? '';
+
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(!!fromUrl.email);
 
   useEffect(() => {
@@ -332,8 +335,8 @@ export function RcartWidget({
     if (!pendingWelcomeEmailRef.current) return;
     if (!resolvedEmail || !effectiveAccountHash) return;
     pendingWelcomeEmailRef.current = false;
-    console.log("check-isNew: ", isNew);
-    if (isNew !== true) return;
+    // console.log("check-isNew: ", isNew);
+    // if (isNew !== true) return;
     void callNotifyApiRef.current(WELCOME_NOTIFY_MILESTONE);
   }, [resolvedEmail, effectiveAccountHash, isNew]);
 
@@ -436,8 +439,8 @@ export function RcartWidget({
             className={styles.goliHeroSection}
           />
           <SectionPartneredGames
-              PixelId={import.meta.env.VITE_FACEBOOK_PIXEL_ID || ''}
-              PixelToken={import.meta.env.VITE_FACEBOOK_ACCESS_TOKEN || ''}
+              PixelId={facebookPixelId}
+              PixelToken={facebookAccessToken}
               partnerCode={partnerCode}
               partnerName={storeName}
               maxIncompleteOffers={partnerSettings?.maxIncompleteOffers || 5}
@@ -485,8 +488,8 @@ export function RcartWidget({
       ) : showPage === 'games' ? (
         <>
           <SectionGameHero
-            PixelId={import.meta.env.VITE_FACEBOOK_PIXEL_ID || ''}
-            PixelToken={import.meta.env.VITE_FACEBOOK_ACCESS_TOKEN || ''}
+            PixelId={facebookPixelId}
+            PixelToken={facebookAccessToken}
             partnerCode={partnerCode}
             partnerName={storeName}
             game={heroGame}
@@ -525,8 +528,8 @@ export function RcartWidget({
 
           <div id="rcart-widget-games" style={{ scrollMarginTop: '1rem' }}>
             <SectionGames
-              PixelId={import.meta.env.VITE_FACEBOOK_PIXEL_ID || ''}
-              PixelToken={import.meta.env.VITE_FACEBOOK_ACCESS_TOKEN || ''}
+              PixelId={facebookPixelId}
+              PixelToken={facebookAccessToken}
               partnerCode={partnerCode}
               partnerName={storeName}
               maxIncompleteOffers={partnerSettings?.maxIncompleteOffers || 5}
