@@ -404,6 +404,7 @@ export function RcartWidget({
     const code = await callDiscountApi(discountAmount);
     if (!code) return null;
 
+<<<<<<< HEAD
     // Update shared state so StorefrontHeader/SectionGames re-render with the code,
     // and return it so ModalSurpriseGift/ProgressRewards can display it immediately.
     setDiscountCode(code);
@@ -430,6 +431,16 @@ export function RcartWidget({
     }
 
     return code;
+=======
+    if (tier === 'install') {
+      setDiscountCode(code);
+      setFirstMilestoneDiscountCode(code);
+    }
+    else {
+      setDiscountCode(code);
+      setLastMilestoneDiscountCode(code);
+    }
+>>>>>>> 30d8c38b1cdfa4421c08024ceaa75e57d6bfb5da
   };
 
   // These are called by ProgressRewards / ModalSurpriseGift when the user clicks
