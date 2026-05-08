@@ -344,8 +344,14 @@ export function RcartWidget({
     const code = await callDiscountApi(discountAmount);
     if (!code) return;
 
-    if (tier === 'install') setFirstMilestoneDiscountCode(code);
-    else setLastMilestoneDiscountCode(code);
+    if (tier === 'install') {
+      setDiscountCode(code);
+      setFirstMilestoneDiscountCode(code);
+    }
+    else {
+      setDiscountCode(code);
+      setLastMilestoneDiscountCode(code);
+    }
   };
 
   const handleFirstMilestoneClaim = async () => {
