@@ -350,17 +350,17 @@ export function RcartWidget({
 
 
   const generateCodeForTier = async (preferHighest: boolean): Promise<string | null> => {
-    const sorted = [...((partnerSettings?.milestones as any[]) ?? [])].sort(
-      (a, b) => Number(a.targetAmount ?? 0) - Number(b.targetAmount ?? 0),
-    );
-    const earned = preferHighest
-      ? [...sorted].reverse().find((m) => m.status === 'earned')
-      : sorted.find((m) => m.status === 'earned');
+    const earnedSorted = [...((partnerSettings?.milestones as any[]) ?? [])]
+      .filter((m) => m.status === 'earned' || m.status === 'claimed')
+      .sort((a, b) => String(a.id ?? '').localeCompare(String(b.id ?? ''), undefined, { numeric: true }));
+    const earned = preferHighest ? earnedSorted.at(-1) : earnedSorted[0];
+
+  
     if (!earned) return null;
 
     const tier = earnedMilestoneTier(earned, partnerSettings?.rewardGoal ?? undefined);
     if (!tier) return null;
-
+  
     const discountAmount: 5 | 100 = tier === 'install' ? 5 : 100;
     const code = await callDiscountApi(discountAmount);
     if (!code) return null;
