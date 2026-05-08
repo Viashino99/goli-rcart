@@ -1,6 +1,6 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "50181c70b9c27f682cff8c39a036eec0"
+client_id = "86d8964cf648b42fcfe8a23456aa6953"
 name = "rcart-widget-goli"
 application_url = "https://rcart-api.vercel.app"
 embedded = true
