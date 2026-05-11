@@ -316,13 +316,13 @@ export function RcartWidget({
   const callNotifyApiRef = useRef(callNotifyApi);
   useEffect(() => { callNotifyApiRef.current = callNotifyApi; });
 
-  // Send the welcome email once accountHash is available so the CTA button has a valid link.
+  // Send the welcome email after handleLogin once we have a non-empty accountHash for the CTA.
   // pendingWelcomeEmail is set in handleLogin with the submitted email address.
-  // Using state (not a ref) ensures React sees the change and re-runs this effect reliably.
   useEffect(() => {
     if (debugMode) console.error('[DEBUG][welcome-effect] fired', { pendingWelcomeEmail, effectiveAccountHash });
     if (!pendingWelcomeEmail) return;
-    if (!effectiveAccountHash) return;
+    const hash = effectiveAccountHash?.trim();
+    if (!hash) return;
     if (debugMode) console.error('[DEBUG][welcome-effect] sending welcome email to', pendingWelcomeEmail);
     setPendingWelcomeEmail(null);
     void callNotifyApiRef.current(WELCOME_NOTIFY_MILESTONE, { emailOverride: pendingWelcomeEmail });
