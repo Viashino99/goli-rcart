@@ -318,15 +318,15 @@ export function RcartWidget({
 
   // Send the welcome email after handleLogin once we have a non-empty accountHash for the CTA.
   // pendingWelcomeEmail is set in handleLogin with the submitted email address.
-  useEffect(() => {
-    if (debugMode) console.error('[DEBUG][welcome-effect] fired', { pendingWelcomeEmail, effectiveAccountHash });
-    if (!pendingWelcomeEmail) return;
-    const hash = effectiveAccountHash?.trim();
-    if (!hash) return;
-    if (debugMode) console.error('[DEBUG][welcome-effect] sending welcome email to', pendingWelcomeEmail);
-    setPendingWelcomeEmail(null);
-    void callNotifyApiRef.current(WELCOME_NOTIFY_MILESTONE, { emailOverride: pendingWelcomeEmail });
-  }, [pendingWelcomeEmail, effectiveAccountHash]);
+  // useEffect(() => {
+  //   if (debugMode) console.error('[DEBUG][welcome-effect] fired', { pendingWelcomeEmail, effectiveAccountHash });
+  //   if (!pendingWelcomeEmail) return;
+  //   const hash = effectiveAccountHash?.trim();
+  //   if (!hash) return;
+  //   if (debugMode) console.error('[DEBUG][welcome-effect] sending welcome email to', pendingWelcomeEmail);
+  //   setPendingWelcomeEmail(null);
+  //   void callNotifyApiRef.current(WELCOME_NOTIFY_MILESTONE, { emailOverride: pendingWelcomeEmail });
+  // }, [pendingWelcomeEmail, effectiveAccountHash]);
 
   const handleLogin = (submittedEmail: string) => {
     if (debugMode) console.error('[DEBUG][handleLogin] called with', submittedEmail);
@@ -334,7 +334,8 @@ export function RcartWidget({
     setResolvedEmail(submittedEmail);
     setIsLoggedIn(true);
     gotoGamesPage?.();
-    setPendingWelcomeEmail(submittedEmail);
+    // setPendingWelcomeEmail(submittedEmail);
+    void callNotifyApiRef.current(WELCOME_NOTIFY_MILESTONE, { emailOverride: submittedEmail });
     if (debugMode) console.error('[DEBUG][handleLogin] pendingWelcomeEmail set to', submittedEmail);
   };
 
