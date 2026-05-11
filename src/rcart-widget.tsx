@@ -43,6 +43,9 @@ export type NotifyMilestonePayload = {
   status: 'locked' | 'earned' | 'claimed';
 };
 
+/** `/api/discount` — when `reused` is true, do not send claim notify (code already existed). */
+type DiscountApiResult = { code: string; reused: boolean };
+
 const WELCOME_NOTIFY_MILESTONE: NotifyMilestonePayload = {
   id: 'welcome',
   icon: 'welcome',
@@ -151,6 +154,9 @@ export function RcartWidget({
   );
   const [discountCode, setDiscountCode] = useState<string | null>(null);
   const pendingWelcomeEmailRef = useRef(false);
+  /** With `reused`, blocks duplicate claim emails from double-clicks in the same tab before the server marks reuse. */
+  const notifyClaimInstallSentRef = useRef(false);
+  const notifyClaimBundleSentRef = useRef(false);
 
   const { logout } = useLogout();
   const { games, activities, partnerSettings, rewardAmount, loading, error,sessionUser ,isNew , refetch } = useRcartGameApi({
@@ -244,7 +250,7 @@ export function RcartWidget({
     console.log("Logged out");
   };
 
-  const callDiscountApi = async (amount: 5 | 100): Promise<string | null> => {
+  const callDiscountApi = async (amount: 5 | 100): Promise<DiscountApiResult | null> => {
     const key = apiKey?.trim();
     if (!apiUrl || !shop || !resolvedEmail || !key) {
       return null;
@@ -268,9 +274,13 @@ export function RcartWidget({
         }),
       });
       if (!res.ok) return null;
-      const data = await res.json();
+      const data = (await res.json()) as { code?: unknown; reused?: unknown };
       console.log("callDiscountApi data: ", data);
-      return data.code ?? null;
+      const raw = data.code;
+      const code = typeof raw === 'string' ? raw.trim() : '';
+      if (!code) return null;
+      const reused = data.reused === true;
+      return { code, reused };
     } catch (error) {
       console.error('callDiscountApi error', error);
       return null;
@@ -371,32 +381,37 @@ export function RcartWidget({
 
     const tier = earnedMilestoneTier(earned, partnerSettings?.rewardGoal ?? undefined);
     if (!tier) return null;
-  
-    const discountAmount: 5 | 100 = tier === 'install' ? 5 : 100;
-    const code = await callDiscountApi(discountAmount);
-    if (!code) return null;
 
+    const discountAmount: 5 | 100 = tier === 'install' ? 5 : 100;
+    const discount = await callDiscountApi(discountAmount);
+    if (!discount) return null;
+
+    const { code, reused } = discount;
     setDiscountCode(code);
     void refetch();
 
-    if (tier === 'install') {
-      void callNotifyApiRef.current({
-        id: 'first-reward',
-        icon: 'dollar',
-        label: 'Surprise Gift — $5 off',
-        targetAmount: 5,
-        status: 'claimed',
-        discountCode: code,
-      });
-    } else {
-      void callNotifyApiRef.current({
-        id: 'goal-reached',
-        icon: 'dollar',
-        label: 'Bundle Goal Reached — $100 off',
-        targetAmount: 100,
-        status: 'claimed',
-        discountCode: code,
-      });
+    if (!reused) {
+      if (tier === 'install' && !notifyClaimInstallSentRef.current) {
+        notifyClaimInstallSentRef.current = true;
+        void callNotifyApiRef.current({
+          id: 'first-reward',
+          icon: 'dollar',
+          label: 'Surprise Gift — $5 off',
+          targetAmount: 5,
+          status: 'claimed',
+          discountCode: code,
+        });
+      } else if (tier === 'bundle' && !notifyClaimBundleSentRef.current) {
+        notifyClaimBundleSentRef.current = true;
+        void callNotifyApiRef.current({
+          id: 'goal-reached',
+          icon: 'dollar',
+          label: 'Bundle Goal Reached — $100 off',
+          targetAmount: 100,
+          status: 'claimed',
+          discountCode: code,
+        });
+      }
     }
 
     return code;
