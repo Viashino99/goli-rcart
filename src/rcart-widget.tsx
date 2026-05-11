@@ -349,11 +349,12 @@ export function RcartWidget({
   // won't fire for returning visitors who already have a session.
   useEffect(() => {
     console.log("check-isNew: ", isNew);
-    if (!pendingWelcomeEmailRef.current) return;
-    if (!resolvedEmail || !effectiveAccountHash) return;
-    pendingWelcomeEmailRef.current = false;
-    // if (isNew !== true) return;
-    void callNotifyApiRef.current(WELCOME_NOTIFY_MILESTONE);
+    if (isNew) {
+      if (!pendingWelcomeEmailRef.current) return;
+      if (!resolvedEmail || !effectiveAccountHash) return;
+      pendingWelcomeEmailRef.current = false;
+      void callNotifyApiRef.current(WELCOME_NOTIFY_MILESTONE);
+    }
   }, [resolvedEmail, effectiveAccountHash, isNew]);
 
   const handleLogin = (submittedEmail: string) => {
