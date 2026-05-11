@@ -341,8 +341,8 @@ export function RcartWidget({
     pixel.fbTracker('Complete Registration', { email: submittedEmail });
     setResolvedEmail(submittedEmail);
     setIsLoggedIn(true);
-    gotoGamesPage?.();
     setPendingWelcomeEmail(submittedEmail);
+    gotoGamesPage?.();
     if (debugMode) console.error('[DEBUG][handleLogin] pendingWelcomeEmail set to', submittedEmail);
   };
 
