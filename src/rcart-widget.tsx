@@ -38,6 +38,8 @@ export type NotifyMilestonePayload = {
   description?: string;
   targetAmount?: number;
   discountCode?: string;
+  ctaText?: string;
+  calloutText?: string;
   status: 'locked' | 'earned' | 'claimed';
 };
 
@@ -46,6 +48,8 @@ const WELCOME_NOTIFY_MILESTONE: NotifyMilestonePayload = {
   icon: 'welcome',
   label: 'Welcome',
   status: 'earned',
+  ctaText: "Unlock $160 now",
+  calloutText: "Unlock $160 now",
 };
 
 function isGamesHash(): boolean {
@@ -306,6 +310,8 @@ export function RcartWidget({
             ...(milestone.price != null ? { price: milestone.price } : {}),
             ...(milestone.targetAmount != null ? { targetAmount: milestone.targetAmount } : {}),
             ...(milestone.discountCode ? { discountCode: milestone.discountCode } : {}),
+            ...(milestone.ctaText ? { ctaText: milestone.ctaText } : {}),
+            ...(milestone.calloutText ? { calloutText: milestone.calloutText } : {}),
             status: milestone.status,
           },
         });
@@ -332,10 +338,10 @@ export function RcartWidget({
   // pendingWelcomeEmailRef is set in handleLogin (never on session restore), so this
   // won't fire for returning visitors who already have a session.
   useEffect(() => {
+    console.log("check-isNew: ", isNew);
     if (!pendingWelcomeEmailRef.current) return;
     if (!resolvedEmail || !effectiveAccountHash) return;
     pendingWelcomeEmailRef.current = false;
-    // console.log("check-isNew: ", isNew);
     // if (isNew !== true) return;
     void callNotifyApiRef.current(WELCOME_NOTIFY_MILESTONE);
   }, [resolvedEmail, effectiveAccountHash, isNew]);
