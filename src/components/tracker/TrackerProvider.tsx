@@ -2,11 +2,31 @@ import { useEffect, useState, Suspense } from "react";
 
 import * as pixel from "../../lib/fbpixel.js";
 
-/** Theme app extension: Liquid sets `data-fbpixel-src` to `fbpixel.js` asset_url. Vite dev serves `public/fbpixel.js` at `/fbpixel.js`. */
+const ALLOWED_FBPIXEL_HOSTS = ['.shopifycdn.com', '.myshopify.com'];
+
+/**
+ * Theme app extension: Liquid sets `data-fbpixel-src` to `fbpixel.js` asset_url.
+ * Vite dev serves `public/fbpixel.js` at `/fbpixel.js`.
+ *
+ * SRI cannot be applied to the nested fbevents.js that this script loads from
+ * connect.facebook.net — Facebook updates it frequently and the hash would
+ * break. The defence here is restricting which origins are allowed to serve
+ * the loader script itself.
+ */
 function resolveFbpixelScriptUrl(): string | null {
   if (typeof document === "undefined") return null;
   const fromBlock = document.getElementById("rcart-widget-root")?.dataset.fbpixelSrc?.trim();
-  if (fromBlock) return fromBlock;
+  if (fromBlock) {
+    try {
+      const { hostname } = new URL(fromBlock);
+      if (!ALLOWED_FBPIXEL_HOSTS.some((suffix) => hostname.endsWith(suffix))) {
+        return null;
+      }
+    } catch {
+      return null;
+    }
+    return fromBlock;
+  }
   return "/fbpixel.js";
 }
 

@@ -23,17 +23,6 @@ export function getFacebookPixelId(): string | undefined {
   return undefined;
 }
 
-/** Build-time token, then Shopify block `data-meta-access-token` on `#rcart-widget-root`. */
-export function getFacebookAccessToken(): string | undefined {
-  if (typeof document !== "undefined") {
-    const fromTheme = document.getElementById("rcart-widget-root")?.dataset.metaAccessToken?.trim();
-    if (fromTheme) return fromTheme;
-  }
-  const env = import.meta.env.VITE_FACEBOOK_ACCESS_TOKEN as string | undefined;
-  if (env && String(env).trim()) return String(env).trim();
-  return undefined;
-}
-
 export const generateEventId = (): string => {
   return crypto.randomUUID();
 };

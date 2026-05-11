@@ -6,10 +6,9 @@
   data-store-name="{{ block.settings.store_name | escape }}"
   data-api-url="{{ block.settings.api_url | escape }}"
   data-shop="{{ shop.permanent_domain }}"
-  {% if block.settings.api_key != blank %}data-api-key="{{ block.settings.api_key | escape }}"{% endif %}
+  {% if block.settings.debug_mode %}data-debug-mode="true"{% endif %}
   data-fbpixel-src="{{ 'fbpixel.js' | asset_url }}"
   {% if block.settings.meta_pixel_id != blank %}data-meta-pixel-id="{{ block.settings.meta_pixel_id | escape }}"{% endif %}
-  {% if block.settings.meta_access_token != blank %}data-meta-access-token="{{ block.settings.meta_access_token | escape }}"{% endif %}
   {% if customer %}data-email="{{ customer.email | escape }}"{% endif %}
   {% if customer %}data-user-id="{{ customer.id | escape }}"{% endif %}
   {% if block.settings.logo_url != blank %}data-logo-src="{{ block.settings.logo_url | image_url: width: 400 | escape }}"{% endif %}
@@ -61,23 +60,17 @@
       "default": "https://rcart-api.vercel.app"
     },
     {
-      "type": "text",
-      "id": "api_key",
-      "label": "API key",
-      "info": "Sent as X-Api-Key on /api/discount. Visible in storefront HTML — prefer app embed secrets only when acceptable.",
-      "default": "goli_dev_key_001"
+      "type": "checkbox",
+      "id": "debug_mode",
+      "label": "Debug mode",
+      "default": false,
+      "info": "Shows a debug bar at the top of the widget with test controls and verbose console logging."
     },
     {
       "type": "text",
       "id": "meta_pixel_id",
       "label": "Meta Pixel ID",
       "info": "Optional. Overrides build-time VITE_FACEBOOK_PIXEL_ID when set. Visible in storefront HTML."
-    },
-    {
-      "type": "text",
-      "id": "meta_access_token",
-      "label": "Meta Access Token",
-      "info": "Optional. Overrides build-time VITE_FACEBOOK_ACCESS_TOKEN for server-side / URL features. Visible in storefront HTML — use only if acceptable for your store."
     },
     {
       "type": "image_picker",

@@ -9,6 +9,12 @@ export default defineConfig({
     'process.env.NODE_ENV': '"production"',
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
   },
+  esbuild: {
+    // Remove all debug logs from the production bundle. console.error is kept
+    // intentionally so browser error tracking tools can still capture it.
+    drop: ['debugger'],
+    pure: ['console.log', 'console.warn', 'console.debug', 'console.info'],
+  },
   build: {
     cssCodeSplit: false,
     sourcemap: false,

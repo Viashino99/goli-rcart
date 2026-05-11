@@ -15,6 +15,21 @@ function zeroHorizontalPaddingOnNearestPageWidth(widgetRoot: HTMLElement) {
   pageWidth.style.maxWidth = '100%';
 }
 
+// Blocks dangerous URI schemes (javascript:, data:, vbscript:) that could execute
+// code if passed to an <img src>. Allows https://, http://, and protocol-relative
+// URLs (//cdn.shopify.com/...) which Shopify's image_url filter can produce.
+const BLOCKED_PROTOCOLS = new Set(['javascript:', 'data:', 'vbscript:']);
+
+function safeImageUrl(url: string): string {
+  if (!url) return '';
+  try {
+    return BLOCKED_PROTOCOLS.has(new URL(url).protocol) ? '' : url;
+  } catch {
+    // Relative or protocol-relative URL — check raw string for dangerous schemes.
+    return /^(javascript|data|vbscript):/i.test(url.trim()) ? '' : url;
+  }
+}
+
 // Mount function so Shopify theme / app-extension script can call it explicitly.
 // It looks for a container element and reads data attributes as configuration.
 declare const __BUILD_TIME__: string;
@@ -33,14 +48,14 @@ export function mountRcartWidget(container: HTMLElement) {
   const defaultApiUrl = import.meta.env.VITE_WIDGET_API_URL || 'https://rcart-api.vercel.app';
   const apiUrl = String(dataset.apiUrl || defaultApiUrl).replace(/\/$/, '');
   const shop = dataset.shop || '';
-  const apiKey = (dataset.apiKey || import.meta.env.VITE_RCART_API_KEY || '').toString().trim();
+  const debugMode = dataset.debugMode === 'true';
   const userId = dataset.userId || '';
-  const logoSrc = dataset.logoSrc || '';
-  const heroImageSrc = dataset.heroImageSrc || '';
+  const logoSrc = safeImageUrl(dataset.logoSrc || '');
+  const heroImageSrc = safeImageUrl(dataset.heroImageSrc || '');
   const stepImages: [string, string, string] = [
-    dataset.step1Image || '',
-    dataset.step2Image || '',
-    dataset.step3Image || '',
+    safeImageUrl(dataset.step1Image || ''),
+    safeImageUrl(dataset.step2Image || ''),
+    safeImageUrl(dataset.step3Image || ''),
   ];
 
   const root = ReactDOM.createRoot(container);
@@ -54,7 +69,7 @@ export function mountRcartWidget(container: HTMLElement) {
           storeName={storeName}
           apiUrl={apiUrl}
           shop={shop}
-          apiKey={apiKey}
+          debugMode={debugMode}
           userId={userId}
           logoSrc={logoSrc}
           heroImageSrc={heroImageSrc}
@@ -65,15 +80,28 @@ export function mountRcartWidget(container: HTMLElement) {
   );
 }
 
-// Expose on window so the Shopify liquid block can call it.
-if (typeof window !== 'undefined') {
-  (window as any).mountRcartWidget = mountRcartWidget;
+// Guards against third-party scripts re-mounting the widget with attacker-controlled config:
+// 1. Container must be an HTMLElement currently in the live document (not detached/crafted).
+// 2. Container must carry the expected ID so arbitrary elements can't be targeted.
+// 3. A data attribute prevents mounting the same element twice.
+function safeMountRcartWidget(container: HTMLElement) {
+  if (!(container instanceof HTMLElement)) return;
+  if (typeof document === 'undefined' || !document.contains(container)) return;
+  if (container.id !== 'rcart-widget-root') return;
+  if (container.dataset.rcartMounted === 'true') return;
+  container.dataset.rcartMounted = 'true';
+  mountRcartWidget(container);
 }
 
-// Optional auto-mount for local testing or simple script tag usage.
+// Expose on window so the Shopify liquid block can call it.
+if (typeof window !== 'undefined') {
+  (window as any).mountRcartWidget = safeMountRcartWidget;
+}
+
+// Auto-mount for local testing or simple script tag usage.
 if (typeof document !== 'undefined') {
   const el = document.getElementById('rcart-widget-root');
   if (el) {
-    mountRcartWidget(el);
+    safeMountRcartWidget(el);
   }
 }

@@ -21,8 +21,7 @@ export type RcartWidgetProps = {
   storeName?: string;
   apiUrl?: string;
   shop?: string;
-  /** Sent as `X-Api-Key` on `/api/discount` (theme setting or `VITE_RCART_API_KEY` at build). */
-  apiKey?: string;
+  debugMode?: boolean;
   logoSrc?: string;
   heroImageSrc?: string;
   stepImages?: [string, string, string];
@@ -136,7 +135,7 @@ export function RcartWidget({
   storeName = 'My Store',
   apiUrl = '',
   shop = '',
-  apiKey = '',
+  debugMode = false,
   userId = '',
   logoSrc: logoSrcProp = '',
   heroImageSrc: heroImageSrcProp = '',
@@ -150,10 +149,10 @@ export function RcartWidget({
     isGamesHash() ? 'games' : 'landing',
   );
   const [discountCode, setDiscountCode] = useState<string | null>(null);
-  const pendingWelcomeEmailRef = useRef(false);
+  const [pendingWelcomeEmail, setPendingWelcomeEmail] = useState<string | null>(null);
 
   const { logout } = useLogout();
-  const { games, activities, partnerSettings, rewardAmount, loading, error,sessionUser ,isNew , refetch } = useRcartGameApi({
+  const { games, activities, partnerSettings, rewardAmount, loading, error, sessionUser, refetch } = useRcartGameApi({
     partnerCode,
     email: resolvedEmail,
   });
@@ -174,7 +173,6 @@ export function RcartWidget({
   const gameList = games?.slice(1);
 
   const facebookPixelId = pixel.getFacebookPixelId() ?? '';
-  const facebookAccessToken = pixel.getFacebookAccessToken() ?? '';
 
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(!!fromUrl.email);
 
@@ -245,34 +243,25 @@ export function RcartWidget({
   };
 
   const callDiscountApi = async (amount: 5 | 100): Promise<string | null> => {
-    const key = apiKey?.trim();
-    if (!apiUrl || !shop || !resolvedEmail || !key) {
+    if (!apiUrl || !shop || !resolvedEmail) {
+      if (debugMode) console.warn('[DEBUG][discount] skipped — missing:', { apiUrl: !!apiUrl, shop: !!shop, email: !!resolvedEmail });
       return null;
     }
     try {
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        'X-Api-Key': key,
-      };
       const base = apiUrl.replace(/\/$/, '');
-      const res = await fetch(`${base}/api/discount`, {
+      const requestBody = { userId, email: resolvedEmail, partnerCode, shop, amount };
+      if (debugMode) console.log('[DEBUG][discount] POST', `${base}/api/widget/discount`, requestBody);
+      const res = await fetch(`${base}/api/widget/discount`, {
         method: 'POST',
-        headers,
-        body: JSON.stringify({
-          userId,
-          email: resolvedEmail,
-          partnerCode: partnerCode,
-          shop: shop,
-          amount: amount,
-          ...(effectiveAccountHash ? { accountHash: effectiveAccountHash } : {}),
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
       });
-      if (!res.ok) return null;
       const data = await res.json();
-      console.log("callDiscountApi data: ", data);
+      if (debugMode) console.log('[DEBUG][discount] response', res.status, data);
+      if (!res.ok) return null;
       return data.code ?? null;
     } catch (error) {
-      console.error('callDiscountApi error', error);
+      console.error('[DEBUG][discount] fetch failed', error);
       return null;
     }
   };
@@ -285,49 +274,42 @@ export function RcartWidget({
       if (!effectiveEmail) { console.warn('[notify] skipped — email missing'); return; }
       if (!shop) { console.warn('[notify] skipped — shop missing'); return; }
       try {
-        const headers: Record<string, string> = {
-          'Content-Type': 'application/json',
-          'X-Api-Key': apiKey,
-        };
         const base = apiUrl.replace(/\/$/, '');
         const widgetUrl = typeof window !== 'undefined'
           ? `${window.location.origin}${window.location.pathname}`
           : '';
-        const body = JSON.stringify({
+        const requestBody = {
           userId,
           email: effectiveEmail,
           partnerCode,
+          shop,
           storeName,
-          shopDomain: shop,
           widgetUrl,
           ...(effectiveAccountHash ? { accountHash: effectiveAccountHash } : {}),
-          milestone: {
-            id: milestone.id,
-            icon: milestone.icon,
-            label: milestone.label,
-            ...(milestone.title != null ? { title: milestone.title } : {}),
-            ...(milestone.description != null ? { description: milestone.description } : {}),
-            ...(milestone.price != null ? { price: milestone.price } : {}),
-            ...(milestone.targetAmount != null ? { targetAmount: milestone.targetAmount } : {}),
-            ...(milestone.discountCode ? { discountCode: milestone.discountCode } : {}),
-            ...(milestone.ctaText ? { ctaText: milestone.ctaText } : {}),
-            ...(milestone.calloutText ? { calloutText: milestone.calloutText } : {}),
-            status: milestone.status,
-          },
+          icon: milestone.icon,
+          label: milestone.label,
+          ...(milestone.title != null ? { title: milestone.title } : {}),
+          ...(milestone.description != null ? { description: milestone.description } : {}),
+          ...(milestone.price != null ? { price: milestone.price } : {}),
+          ...(milestone.targetAmount != null ? { targetAmount: milestone.targetAmount } : {}),
+          ...(milestone.discountCode ? { discountCode: milestone.discountCode } : {}),
+        };
+        if (debugMode) console.log('[DEBUG][notify] POST', `${base}/api/widget/notify`, requestBody);
+        const res = await fetch(`${base}/api/widget/notify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody),
         });
-        console.log('[notify] POST', `${base}/api/notify`, JSON.parse(body));
-        const res = await fetch(`${base}/api/notify`, { method: 'POST', headers, body });
-        const text = await res.text();
+        const responseText = await res.text();
+        if (debugMode) console.log('[DEBUG][notify] response', res.status, responseText);
         if (!res.ok) {
-          console.error('[notify] API error', res.status, text);
-        } else {
-          console.log('[notify] success', res.status, text);
+          console.error('[notify] API error', res.status, responseText);
         }
       } catch (err) {
         console.error('[notify] fetch failed', err);
       }
     },
-    [apiUrl, shop, apiKey, partnerCode, storeName, effectiveAccountHash, resolvedEmail, userId],
+    [apiUrl, shop, partnerCode, storeName, effectiveAccountHash, resolvedEmail, userId],
   );
 
   // Stable ref so the welcome-email effect always calls the latest callNotifyApi.
@@ -335,28 +317,25 @@ export function RcartWidget({
   useEffect(() => { callNotifyApiRef.current = callNotifyApi; });
 
   // Send the welcome email once accountHash is available so the CTA button has a valid link.
-  // pendingWelcomeEmailRef is set in handleLogin (never on session restore), so this
-  // won't fire for returning visitors who already have a session.
+  // pendingWelcomeEmail is set in handleLogin with the submitted email address.
+  // Using state (not a ref) ensures React sees the change and re-runs this effect reliably.
   useEffect(() => {
-    console.log("check-isNew: ", isNew);
-    if (!pendingWelcomeEmailRef.current) return;
-    if (!resolvedEmail || !effectiveAccountHash) return;
-    pendingWelcomeEmailRef.current = false;
-    // if (isNew !== true) return;
-    void callNotifyApiRef.current(WELCOME_NOTIFY_MILESTONE);
-  }, [resolvedEmail, effectiveAccountHash, isNew]);
+    if (debugMode) console.error('[DEBUG][welcome-effect] fired', { pendingWelcomeEmail, effectiveAccountHash });
+    if (!pendingWelcomeEmail) return;
+    if (!effectiveAccountHash) return;
+    if (debugMode) console.error('[DEBUG][welcome-effect] sending welcome email to', pendingWelcomeEmail);
+    setPendingWelcomeEmail(null);
+    void callNotifyApiRef.current(WELCOME_NOTIFY_MILESTONE, { emailOverride: pendingWelcomeEmail });
+  }, [pendingWelcomeEmail, effectiveAccountHash]);
 
   const handleLogin = (submittedEmail: string) => {
-    // TODO: Add shopify login logic to login the user and then set the resolvedEmail
-    pixel.fbTracker('Complete Registration', {
-      email: submittedEmail,
-    });
+    if (debugMode) console.error('[DEBUG][handleLogin] called with', submittedEmail);
+    pixel.fbTracker('Complete Registration', { email: submittedEmail });
     setResolvedEmail(submittedEmail);
     setIsLoggedIn(true);
     gotoGamesPage?.();
-    // Mark welcome email as pending — sent by the effect below once accountHash is ready,
-    // so the CTA button in the email has a valid magic link.
-    pendingWelcomeEmailRef.current = true;
+    setPendingWelcomeEmail(submittedEmail);
+    if (debugMode) console.error('[DEBUG][handleLogin] pendingWelcomeEmail set to', submittedEmail);
   };
 
 
@@ -412,8 +391,56 @@ export function RcartWidget({
   const handleFirstMilestoneClaim = () => {};
   const handleLastMilestoneClaim = () => {};
 
+  const [debugStatus, setDebugStatus] = React.useState<string>('');
+  const [debugEmail, setDebugEmail] = React.useState<string>('');
+
   return (
     <div>
+      {debugMode && (
+        <div style={{ background: '#1a1a2e', color: '#e0e0ff', fontFamily: 'monospace', fontSize: '12px', padding: '12px 16px', borderBottom: '2px solid #ff4444' }}>
+          <strong style={{ color: '#ff4444' }}>⚠ DEBUG MODE</strong>
+          <div style={{ marginTop: 8, lineHeight: 1.7 }}>
+            <div>apiUrl: <span style={{ color: '#7fff7f' }}>{apiUrl || '❌ missing'}</span></div>
+            <div>shop: <span style={{ color: '#7fff7f' }}>{shop || '❌ missing'}</span></div>
+            <div>email (session): <span style={{ color: '#7fff7f' }}>{resolvedEmail || '❌ missing'}</span></div>
+            <div>userId: <span style={{ color: '#7fff7f' }}>{userId || '(empty)'}</span></div>
+            <div>partnerCode: <span style={{ color: '#7fff7f' }}>{partnerCode || '❌ missing'}</span></div>
+            <div>accountHash: <span style={{ color: '#7fff7f' }}>{effectiveAccountHash || '(none yet)'}</span></div>
+          </div>
+          <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <input
+              type="email"
+              placeholder={resolvedEmail || 'override email…'}
+              value={debugEmail}
+              onChange={(e) => setDebugEmail(e.target.value)}
+              style={{ background: '#0d0d1a', color: '#e0e0ff', border: '1px solid #444', borderRadius: 4, padding: '5px 10px', fontFamily: 'monospace', fontSize: '12px', width: 220 }}
+            />
+            <button
+              onClick={async () => {
+                const email = debugEmail.trim() || resolvedEmail || '';
+                if (!email) { setDebugStatus('❌ enter an email first'); return; }
+                setDebugStatus('sending welcome email…');
+                await callNotifyApiRef.current(WELCOME_NOTIFY_MILESTONE, { emailOverride: email });
+                setDebugStatus('done — check console + Vercel logs');
+              }}
+              style={{ background: '#ff4444', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 12px', cursor: 'pointer', fontFamily: 'monospace' }}
+            >
+              Send Welcome Email
+            </button>
+            <button
+              onClick={async () => {
+                setDebugStatus('requesting discount code…');
+                const code = await callDiscountApi(5);
+                setDebugStatus(code ? `✅ code: ${code}` : '❌ no code returned — check console');
+              }}
+              style={{ background: '#444', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 12px', cursor: 'pointer', fontFamily: 'monospace' }}
+            >
+              Test $5 Discount
+            </button>
+          </div>
+          {debugStatus && <div style={{ marginTop: 8, color: '#ffd700' }}>{debugStatus}</div>}
+        </div>
+      )}
       <StorefrontHeader
         partnerCode={partnerCode}
         partnerName={storeName}
@@ -446,7 +473,7 @@ export function RcartWidget({
           />
           <SectionPartneredGames
               PixelId={facebookPixelId}
-              PixelToken={facebookAccessToken}
+              PixelToken=""
               partnerCode={partnerCode}
               partnerName={storeName}
               maxIncompleteOffers={partnerSettings?.maxIncompleteOffers || 5}
@@ -495,7 +522,7 @@ export function RcartWidget({
         <>
           <SectionGameHero
             PixelId={facebookPixelId}
-            PixelToken={facebookAccessToken}
+            PixelToken=""
             partnerCode={partnerCode}
             partnerName={storeName}
             game={heroGame}
@@ -535,7 +562,7 @@ export function RcartWidget({
           <div id="rcart-widget-games" style={{ scrollMarginTop: '1rem' }}>
             <SectionGames
               PixelId={facebookPixelId}
-              PixelToken={facebookAccessToken}
+              PixelToken=""
               partnerCode={partnerCode}
               partnerName={storeName}
               maxIncompleteOffers={partnerSettings?.maxIncompleteOffers || 5}
