@@ -152,7 +152,7 @@ export function RcartWidget({
   const [pendingWelcomeEmail, setPendingWelcomeEmail] = useState<string | null>(null);
 
   const { logout } = useLogout();
-  const { games, activities, partnerSettings, rewardAmount, loading, error, sessionUser, refetch } = useRcartGameApi({
+  const { games, activities, partnerSettings, rewardAmount, loading, error, sessionUser, isNew, refetch } = useRcartGameApi({
     partnerCode,
     email: resolvedEmail,
   });
@@ -242,7 +242,10 @@ export function RcartWidget({
     console.log("Logged out");
   };
 
-  const callDiscountApi = async (amount: 5 | 100): Promise<string | null> => {
+  const notifyClaimInstallSentRef = useRef(false);
+  const notifyClaimBundleSentRef = useRef(false);
+
+  const callDiscountApi = async (amount: 5 | 100): Promise<{ code: string; reused: boolean } | null> => {
     if (!apiUrl || !shop || !resolvedEmail) {
       if (debugMode) console.warn('[DEBUG][discount] skipped — missing:', { apiUrl: !!apiUrl, shop: !!shop, email: !!resolvedEmail });
       return null;
@@ -259,7 +262,7 @@ export function RcartWidget({
       const data = await res.json();
       if (debugMode) console.log('[DEBUG][discount] response', res.status, data);
       if (!res.ok) return null;
-      return data.code ?? null;
+      return data.code != null ? { code: data.code, reused: data.reused ?? false } : null;
     } catch (error) {
       console.error('[DEBUG][discount] fetch failed', error);
       return null;
@@ -316,17 +319,22 @@ export function RcartWidget({
   const callNotifyApiRef = useRef(callNotifyApi);
   useEffect(() => { callNotifyApiRef.current = callNotifyApi; });
 
-  // Send the welcome email after handleLogin once we have a non-empty accountHash for the CTA.
-  // pendingWelcomeEmail is set in handleLogin with the submitted email address.
-  // useEffect(() => {
-  //   if (debugMode) console.error('[DEBUG][welcome-effect] fired', { pendingWelcomeEmail, effectiveAccountHash });
-  //   if (!pendingWelcomeEmail) return;
-  //   const hash = effectiveAccountHash?.trim();
-  //   if (!hash) return;
-  //   if (debugMode) console.error('[DEBUG][welcome-effect] sending welcome email to', pendingWelcomeEmail);
-  //   setPendingWelcomeEmail(null);
-  //   void callNotifyApiRef.current(WELCOME_NOTIFY_MILESTONE, { emailOverride: pendingWelcomeEmail });
-  // }, [pendingWelcomeEmail, effectiveAccountHash]);
+  // Send the welcome email only to genuinely new users, and only once we have an
+  // accountHash (needed for the CTA link in the email). isNew comes from the game API
+  // response after the email is resolved — that's why we defer via state rather than
+  // calling directly in handleLogin.
+  useEffect(() => {
+    if (debugMode) console.error('[DEBUG][welcome-effect] fired', { pendingWelcomeEmail, effectiveAccountHash, isNew });
+    if (!pendingWelcomeEmail) return;
+    if (!effectiveAccountHash) { if (debugMode) console.error('[DEBUG][welcome-effect] waiting — no accountHash yet'); return; }
+    if (!isNew) {
+      console.error('[welcome-effect] skipped — isNew is false (existing user or API not yet responded)');
+      return;
+    }
+    if (debugMode) console.error('[DEBUG][welcome-effect] sending welcome email to', pendingWelcomeEmail);
+    setPendingWelcomeEmail(null);
+    void callNotifyApiRef.current(WELCOME_NOTIFY_MILESTONE, { emailOverride: pendingWelcomeEmail });
+  }, [pendingWelcomeEmail, effectiveAccountHash, isNew]);
 
   const handleLogin = (submittedEmail: string) => {
     if (debugMode) console.error('[DEBUG][handleLogin] called with', submittedEmail);
@@ -334,8 +342,7 @@ export function RcartWidget({
     setResolvedEmail(submittedEmail);
     setIsLoggedIn(true);
     gotoGamesPage?.();
-    // setPendingWelcomeEmail(submittedEmail);
-    void callNotifyApiRef.current(WELCOME_NOTIFY_MILESTONE, { emailOverride: submittedEmail });
+    setPendingWelcomeEmail(submittedEmail);
     if (debugMode) console.error('[DEBUG][handleLogin] pendingWelcomeEmail set to', submittedEmail);
   };
 
@@ -353,30 +360,36 @@ export function RcartWidget({
     if (!tier) return null;
   
     const discountAmount: 5 | 100 = tier === 'install' ? 5 : 100;
-    const code = await callDiscountApi(discountAmount);
-    if (!code) return null;
+    const discount = await callDiscountApi(discountAmount);
+    if (!discount) return null;
+
+    const { code, reused } = discount;
 
     setDiscountCode(code);
     void refetch();
 
-    if (tier === 'install') {
-      void callNotifyApiRef.current({
-        id: 'first-reward',
-        icon: 'dollar',
-        label: 'Surprise Gift — $5 off',
-        targetAmount: 5,
-        status: 'claimed',
-        discountCode: code,
-      });
-    } else {
-      void callNotifyApiRef.current({
-        id: 'goal-reached',
-        icon: 'dollar',
-        label: 'Bundle Goal Reached — $100 off',
-        targetAmount: 100,
-        status: 'claimed',
-        discountCode: code,
-      });
+    if (!reused) {
+      if (tier === 'install' && !notifyClaimInstallSentRef.current) {
+        notifyClaimInstallSentRef.current = true;
+        void callNotifyApiRef.current({
+          id: 'first-reward',
+          icon: 'dollar',
+          label: 'Surprise Gift — $5 off',
+          targetAmount: 5,
+          status: 'claimed',
+          discountCode: code,
+        });
+      } else if (tier === 'bundle' && !notifyClaimBundleSentRef.current) {
+        notifyClaimBundleSentRef.current = true;
+        void callNotifyApiRef.current({
+          id: 'goal-reached',
+          icon: 'dollar',
+          label: 'Bundle Goal Reached — $100 off',
+          targetAmount: 100,
+          status: 'claimed',
+          discountCode: code,
+        });
+      }
     }
 
     return code;
@@ -407,6 +420,8 @@ export function RcartWidget({
             <div>userId: <span style={{ color: '#7fff7f' }}>{userId || '(empty)'}</span></div>
             <div>partnerCode: <span style={{ color: '#7fff7f' }}>{partnerCode || '❌ missing'}</span></div>
             <div>accountHash: <span style={{ color: '#7fff7f' }}>{effectiveAccountHash || '(none yet)'}</span></div>
+            <div>isNew: <span style={{ color: isNew ? '#7fff7f' : '#ff8888' }}>{isNew ? 'true ✓ (welcome email will fire)' : 'false ✗ (welcome email blocked)'}</span></div>
+            <div>pendingWelcomeEmail: <span style={{ color: '#7fff7f' }}>{pendingWelcomeEmail || '(none)'}</span></div>
           </div>
           <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <input
@@ -431,8 +446,8 @@ export function RcartWidget({
             <button
               onClick={async () => {
                 setDebugStatus('requesting discount code…');
-                const code = await callDiscountApi(5);
-                setDebugStatus(code ? `✅ code: ${code}` : '❌ no code returned — check console');
+                const result = await callDiscountApi(5);
+                setDebugStatus(result ? `✅ code: ${result.code}${result.reused ? ' (reused)' : ''}` : '❌ no code returned — check console');
               }}
               style={{ background: '#444', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 12px', cursor: 'pointer', fontFamily: 'monospace' }}
             >
