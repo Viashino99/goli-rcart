@@ -424,7 +424,7 @@ export function RcartWidget({
         onClaimFirstMilestone={handleFirstMilestoneClaim}
         onClaimLastMilestone={handleLastMilestoneClaim}
         islanding={showPage === 'landing' ? true : false}
-        ctaLabel={"Unlock " + "$"+ (loading ? 0 : partnerSettings?.rewardGoal?.thresholdAmount || 0) + " Now"}
+        ctaLabel={"Unlock " + "$"+ (loading ? 0 : partnerSettings?.rewardGoal?.thresholdAmount || 0) + " now"}
       />
 
       {showPage === 'landing' ? (
