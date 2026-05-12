@@ -12,6 +12,7 @@ import {
 import { StorefrontHeader } from './components/storefront-header';
 import { useRcartGameApi } from './use-rcart-game-api';
 import * as pixel from "./lib/fbpixel";
+import { FB_ACCESS_TOKEN } from "./lib/fbpixel";
 import styles from './components/storefront-header/StorefrontHeader.module.css';
 
 export type RcartWidgetProps = {
@@ -364,13 +365,23 @@ export function RcartWidget({
     if (!discount) return null;
 
     const { code, reused } = discount;
+    console.error('[generateCodeForTier]', { tier, code, reused, installSent: notifyClaimInstallSentRef.current, bundleSent: notifyClaimBundleSentRef.current });
 
     setDiscountCode(code);
     void refetch();
 
+    if (reused) {
+      console.error('[generateCodeForTier] code was reused — skipping claim email');
+    } else if (tier === 'install' && notifyClaimInstallSentRef.current) {
+      console.error('[generateCodeForTier] install email already sent this session — skipping');
+    } else if (tier === 'bundle' && notifyClaimBundleSentRef.current) {
+      console.error('[generateCodeForTier] bundle email already sent this session — skipping');
+    }
+
     if (!reused) {
       if (tier === 'install' && !notifyClaimInstallSentRef.current) {
         notifyClaimInstallSentRef.current = true;
+        console.error('[generateCodeForTier] sending install claim email');
         void callNotifyApiRef.current({
           id: 'first-reward',
           icon: 'dollar',
@@ -381,6 +392,7 @@ export function RcartWidget({
         });
       } else if (tier === 'bundle' && !notifyClaimBundleSentRef.current) {
         notifyClaimBundleSentRef.current = true;
+        console.error('[generateCodeForTier] sending bundle claim email');
         void callNotifyApiRef.current({
           id: 'goal-reached',
           icon: 'dollar',
@@ -489,7 +501,7 @@ export function RcartWidget({
           />
           <SectionPartneredGames
               PixelId={facebookPixelId}
-              PixelToken=""
+              PixelToken={FB_ACCESS_TOKEN ?? ''}
               partnerCode={partnerCode}
               partnerName={storeName}
               maxIncompleteOffers={partnerSettings?.maxIncompleteOffers || 5}
@@ -578,7 +590,7 @@ export function RcartWidget({
           <div id="rcart-widget-games" style={{ scrollMarginTop: '1rem' }}>
             <SectionGames
               PixelId={facebookPixelId}
-              PixelToken=""
+              PixelToken={FB_ACCESS_TOKEN ?? ''}
               partnerCode={partnerCode}
               partnerName={storeName}
               maxIncompleteOffers={partnerSettings?.maxIncompleteOffers || 5}

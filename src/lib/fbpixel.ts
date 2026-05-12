@@ -4,8 +4,11 @@ declare global {
   }
 }
 
-/** Inlined at `vite build` from `VITE_FACEBOOK_PIXEL_ID` in `.env` (goli-rcart default). */
+/** Inlined at `vite build` from `VITE_FACEBOOK_PIXEL_ID` in `.env.local` (goli-rcart default). */
 export const FB_PIXEL_ID = import.meta.env.VITE_FACEBOOK_PIXEL_ID as string | undefined;
+
+/** Inlined at `vite build` from `VITE_FACEBOOK_ACCESS_TOKEN` in `.env.local`. */
+export const FB_ACCESS_TOKEN = import.meta.env.VITE_FACEBOOK_ACCESS_TOKEN as string | undefined;
 
 /**
  * Shopify block `data-meta-pixel-id` or legacy `data-facebook-pixel-id`, then build-time `VITE_FACEBOOK_PIXEL_ID`.
