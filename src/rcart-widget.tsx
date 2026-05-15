@@ -14,6 +14,7 @@ import { useRcartGameApi } from './use-rcart-game-api';
 import * as pixel from "./lib/fbpixel";
 import { FB_ACCESS_TOKEN } from "./lib/fbpixel";
 import styles from './components/storefront-header/StorefrontHeader.module.css';
+import TrackerProvider from './components/tracker/TrackerProvider';
 
 export type RcartWidgetProps = {
   partnerCode: string;
@@ -210,7 +211,7 @@ export function RcartWidget({
 
   const gotoGamesPage = () => {
     //TODO: Add shopify logic to redirect to the games page
-    pixel.fbTracker("View Games", {
+    pixel.fbTracker("View Content", {
       email: resolvedEmail,
     });
 
@@ -519,6 +520,11 @@ export function RcartWidget({
                 // TODO: analytics — game_start (source: partnered games)
                 console.log("Game Started!", selectedGame);
               }}
+              onSelectedGame={(selectedGame) => {
+                pixel.fbTracker("Lead", {
+                  ...selectedGame
+                });
+              }}
             />
           <SectionSteps
             partnerName={storeName}
@@ -581,6 +587,9 @@ export function RcartWidget({
               // Secondary CTA on the game card in the hero (e.g. “details” / alternate action), not the same as onCtaClick in all themes.
               // TODO: analytics — game_cta_click (source: hero)
               console.log("Game CTA Clicked!", selectedGame);
+              pixel.fbTracker("Lead", {
+                ...selectedGame
+              });
             }}
             activities={activities || []}
             maxIncompleteOffers={partnerSettings?.maxIncompleteOffers || 5}
@@ -606,7 +615,7 @@ export function RcartWidget({
               onSelectedGame={(selectedGame) => {
                 // User highlighted or selected a game in the grid before starting.
                 // TODO: analytics — game_selected (source: games)
-                pixel.fbTracker("View Content", {
+                pixel.fbTracker("Lead", {
                   ...selectedGame
                 });
             
