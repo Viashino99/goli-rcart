@@ -13,7 +13,7 @@ export default defineConfig({
     // Remove all debug logs from the production bundle. console.error is kept
     // intentionally so browser error tracking tools can still capture it.
     drop: ['debugger'],
-    // pure: ['console.log', 'console.warn', 'console.debug', 'console.info'],
+    pure: ['console.log', 'console.warn', 'console.debug', 'console.info'],
   },
   build: {
     cssCodeSplit: false,
