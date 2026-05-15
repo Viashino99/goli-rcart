@@ -18,4 +18,5 @@ uri = "/api/webhooks/app-uninstalled"
 scopes = "write_price_rules,write_discounts,read_discounts"
 
 [auth]
-redirect_urls = ["https://e517-99-79-54-142.ngrok-free.app/api/auth/callback","https://rcart-api.vercel.app/api/auth/callback"]
+redirect_urls = ["https://e517-99-79-54-142.ngrok-free.app/api/auth/callback",
+"https://rcart-api.vercel.app/api/auth/callback"]
