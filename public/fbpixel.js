@@ -1,13 +1,14 @@
 (function () {
-  if (window.__rcartFbPixelBooted) return;
-  window.__rcartFbPixelBooted = true;
-
-  // Async/injected scripts: document.currentScript is null; use the matching tag we appended.
   const scriptEl =
     document.currentScript ||
-    [...document.querySelectorAll("script[src*='fbpixel.js']")].pop();
-  const pixelId = scriptEl?.getAttribute("data-pixel-id");
+    [...document.querySelectorAll("script[data-pixel-id][src*='fbpixel']")].pop();
+  const pixelId =
+    scriptEl?.getAttribute("data-pixel-id") ||
+    window.__rcartFbPixelPendingId;
   if (!pixelId) return;
+
+  // Already initialized for this pixel (e.g. script tag re-appended after StrictMode cleanup).
+  if (window.__rcartFbPixelId === pixelId && window.fbq) return;
 
   function initializeFacebookPixel(f, b, e, v, n, t, s) {
     if (f.fbq) return;
@@ -34,4 +35,6 @@
   );
 
   window.fbq("init", pixelId);
+  window.__rcartFbPixelId = pixelId;
+  delete window.__rcartFbPixelPendingId;
 })();

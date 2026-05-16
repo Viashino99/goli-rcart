@@ -1,33 +1,44 @@
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import * as pixel from "../../lib/fbpixel.js";
 
 const ALLOWED_FBPIXEL_HOSTS = ['.shopifycdn.com', '.myshopify.com'];
 
+export type TrackerProviderProps = {
+  /** Same node passed to `createRoot` — reads `data-meta-pixel-id` / `data-fbpixel-src`. */
+  widgetRoot?: HTMLElement | null;
+};
+
 /**
- * Theme app extension: Liquid sets `data-fbpixel-src` to `fbpixel.js` asset_url.
- * Vite dev serves `public/fbpixel.js` at `/fbpixel.js`.
+ * Shopify: Liquid sets `data-fbpixel-src="{{ 'fbpixel.js' | asset_url }}"` (CDN URL). That file is
+ * `extensions/.../assets/fbpixel.js` in the app — not the store's `/pages/...`.
  *
- * SRI cannot be applied to the nested fbevents.js that this script loads from
- * connect.facebook.net — Facebook updates it frequently and the hash would
- * break. The defence here is restricting which origins are allowed to serve
- * the loader script itself.
+ * Vite dev: `public/fbpixel.js` is only available at the dev origin root as `/fbpixel.js`.
+ * Never use `./fbpixel.js` — on `/pages/foo` the browser requests `/pages/fbpixel.js` (404).
  */
-function resolveFbpixelScriptUrl(): string | null {
-  if (typeof document === "undefined") return null;
-  const fromBlock = document.getElementById("rcart-widget-root")?.dataset.fbpixelSrc?.trim();
+function resolveFbpixelScriptUrl(widgetRoot?: HTMLElement | null): string | null {
+  if (typeof document === "undefined" || typeof window === "undefined") return null;
+
+  const fromBlock =
+    widgetRoot?.dataset.fbpixelSrc?.trim() ??
+    document.getElementById("rcart-widget-root")?.dataset.fbpixelSrc?.trim();
   if (fromBlock) {
     try {
       const { hostname } = new URL(fromBlock);
-      if (!ALLOWED_FBPIXEL_HOSTS.some((suffix) => hostname.endsWith(suffix))) {
-        return null;
-      }
+      const allowed =
+        hostname === "cdn.shopify.com" ||
+        ALLOWED_FBPIXEL_HOSTS.some((suffix) => hostname.endsWith(suffix));
+      if (!allowed) return null;
     } catch {
       return null;
     }
     return fromBlock;
   }
-  return "/fbpixel.js";
+
+  if (import.meta.env.DEV) {
+    return new URL("/fbpixel.js", window.location.origin).href;
+  }
+  return null;
 }
 
 function readUrlKey(): string {
@@ -35,9 +46,14 @@ function readUrlKey(): string {
   return `${window.location.pathname}${window.location.search}`;
 }
 
-const FacebookPixel = () => {
+/** Survives StrictMode remount so we do not remove/re-inject the loader script. */
+let fbpixelScriptInjected = false;
+
+const FacebookPixel = ({ widgetRoot }: { widgetRoot?: HTMLElement | null }) => {
   const [loaded, setLoaded] = useState(false);
   const [urlKey, setUrlKey] = useState(readUrlKey);
+  const widgetRootRef = useRef(widgetRoot);
+  widgetRootRef.current = widgetRoot;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -51,31 +67,44 @@ const FacebookPixel = () => {
     };
   }, []);
 
-  // Load script manually (replacement for next/script)
   useEffect(() => {
-    if (typeof document === "undefined") return;
-    const pixelId = pixel.getFacebookPixelId();
+    if (typeof document === "undefined" || typeof window === "undefined") return;
+    const root = widgetRootRef.current;
+    const pixelId = pixel.getFacebookPixelIdFromRoot(root ?? undefined);
     if (!pixelId) {
       setLoaded(true);
       return;
     }
-    const src = resolveFbpixelScriptUrl();
+    const fbqReady =
+      typeof window.__rcartFbPixelId === "string" &&
+      window.__rcartFbPixelId === pixelId &&
+      typeof window.fbq === "function";
+    if (fbqReady) {
+      setLoaded(true);
+      return;
+    }
+    const src = resolveFbpixelScriptUrl(root);
     if (!src) {
       setLoaded(true);
       return;
     }
+    if (fbpixelScriptInjected) {
+      setLoaded(true);
+      return;
+    }
+    fbpixelScriptInjected = true;
+    window.__rcartFbPixelPendingId = pixelId;
+
     const script = document.createElement("script");
     script.src = src;
     script.async = true;
     script.setAttribute("data-pixel-id", pixelId);
     script.onload = () => setLoaded(true);
     script.onerror = () => setLoaded(true);
-
+    
     document.body.appendChild(script);
-
-    return () => {
-      script.remove();
-    };
+    // Do not remove the script on effect cleanup — StrictMode would abort load and
+    // the old boot flag blocked retries before fbevents.js could run.
   }, []);
 
   useEffect(() => {
@@ -91,12 +120,8 @@ const FacebookPixel = () => {
   return null;
 };
 
-const TrackerProvider = () => {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <FacebookPixel />
-    </Suspense>
-  );
-};
+const TrackerProvider = ({ widgetRoot }: TrackerProviderProps) => (
+  <FacebookPixel widgetRoot={widgetRoot} />
+);
 
 export default TrackerProvider;

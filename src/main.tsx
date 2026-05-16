@@ -62,7 +62,7 @@ export function mountRcartWidget(container: HTMLElement) {
   root.render(
     <React.StrictMode>
       <ThemeProvider defaultMode="system">
-        <TrackerProvider />
+        <TrackerProvider widgetRoot={container} />
         <RcartWidget
           partnerCode={partnerCode}
           email={email}

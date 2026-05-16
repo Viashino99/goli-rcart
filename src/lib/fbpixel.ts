@@ -1,6 +1,9 @@
 declare global {
   interface Window {
     fbq?: (...args: unknown[]) => void;
+    /** Set by TrackerProvider before injecting `fbpixel.js` (async scripts may not expose `data-pixel-id`). */
+    __rcartFbPixelPendingId?: string;
+    __rcartFbPixelId?: string;
   }
 }
 
@@ -11,19 +14,27 @@ export const FB_PIXEL_ID = import.meta.env.VITE_FACEBOOK_PIXEL_ID as string | un
 export const FB_ACCESS_TOKEN = import.meta.env.VITE_FACEBOOK_ACCESS_TOKEN as string | undefined;
 
 /**
- * Shopify block `data-meta-pixel-id` or legacy `data-facebook-pixel-id`, then build-time `VITE_FACEBOOK_PIXEL_ID`.
+ * Reads pixel id from the widget host (`data-meta-pixel-id` / legacy `data-facebook-pixel-id`),
+ * then build-time `VITE_FACEBOOK_PIXEL_ID`.
  */
-export function getFacebookPixelId(): string | undefined {
-  if (typeof document !== "undefined") {
-    const root = document.getElementById("rcart-widget-root");
-    const meta = root?.dataset.metaPixelId?.trim();
+export function getFacebookPixelIdFromRoot(
+  root: HTMLElement | null | undefined,
+): string | undefined {
+  if (root) {
+    const meta = root.dataset.metaPixelId?.trim();
     if (meta) return meta;
-    const legacy = root?.dataset.facebookPixelId?.trim();
+    const legacy = root.dataset.facebookPixelId?.trim();
     if (legacy) return legacy;
   }
   const env = FB_PIXEL_ID;
   if (env && String(env).trim()) return String(env).trim();
   return undefined;
+}
+
+export function getFacebookPixelId(): string | undefined {
+  const root =
+    typeof document !== "undefined" ? document.getElementById("rcart-widget-root") : null;
+  return getFacebookPixelIdFromRoot(root);
 }
 
 export const generateEventId = (): string => {
