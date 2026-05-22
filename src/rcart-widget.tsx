@@ -128,8 +128,6 @@ function stripEmailAndAccountHashFromUrl(): void {
   window.history.replaceState(null, '', `${url.pathname}${q ? `?${q}` : ''}${url.hash}`);
 }
 
-/** Survives StrictMode dev double-mount so `pageview` is not sent twice. */
-let initialWidgetPageviewSent = false;
 
 export function RcartWidget({
   partnerCode = 'goli',
@@ -179,13 +177,6 @@ export function RcartWidget({
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(!!fromUrl.email);
 
   useEffect(() => {
-    if (initialWidgetPageviewSent) return;
-    initialWidgetPageviewSent = true;
-    pixel.pageview();
-  }, []);
-
-  useEffect(() => {
-    
     const onHashChange = () => {
       setShowPage(isGamesHash() ? 'games' : 'landing');
     };
@@ -211,8 +202,10 @@ export function RcartWidget({
 
   const gotoGamesPage = () => {
     //TODO: Add shopify logic to redirect to the games page
-    pixel.fbTracker("View Content", {
-      email: resolvedEmail,
+    pixel.fbTracker("ViewContent", {
+      content_ids: ['games-page'],
+      content_type: 'product',
+      content_name: 'Games Page',
     });
 
     setShowPage('games');
@@ -340,7 +333,7 @@ export function RcartWidget({
 
   const handleLogin = (submittedEmail: string) => {
     if (debugMode) console.error('[DEBUG][handleLogin] called with', submittedEmail);
-    pixel.fbTracker('Complete Registration', { email: submittedEmail });
+    pixel.fbTracker('CompleteRegistration', { status: true });
     setResolvedEmail(submittedEmail);
     setIsLoggedIn(true);
     setPendingWelcomeEmail(submittedEmail);
@@ -522,7 +515,8 @@ export function RcartWidget({
               }}
               onSelectedGame={(selectedGame) => {
                 pixel.fbTracker("Lead", {
-                  ...selectedGame
+                  content_name: (selectedGame as any)?.title ?? (selectedGame as any)?.name ?? '',
+                  content_category: 'game',
                 });
               }}
             />
@@ -563,8 +557,10 @@ export function RcartWidget({
             onCtaClick={() => {
               // User clicked the game hero CTA
               //TODO: Add shopify tracking here and internal logic.
-              pixel.fbTracker("View Content", {
-                ...heroGame
+              pixel.fbTracker("ViewContent", {
+                content_ids: [(heroGame as any)?.offerId ?? 'hero-game'],
+                content_type: 'product',
+                content_name: heroGame?.title ?? '',
               });
           
               console.log("Game Hero CTA Clicked!");
@@ -616,7 +612,8 @@ export function RcartWidget({
                 // User highlighted or selected a game in the grid before starting.
                 // TODO: analytics — game_selected (source: games)
                 pixel.fbTracker("Lead", {
-                  ...selectedGame
+                  content_name: (selectedGame as any)?.title ?? (selectedGame as any)?.name ?? '',
+                  content_category: 'game',
                 });
             
                 console.log("Selected Game!", selectedGame);

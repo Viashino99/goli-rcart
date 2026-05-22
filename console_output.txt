@@ -1,0 +1,253 @@
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+Tracking Prevention blocked access to storage for <URL>.
+
+bundle.js:19 No tests/personalizations found  if this is unexpected, check exclusion rules
+bundle.js:19 No tests/personalizations found  if this is unexpected, check exclusion rules
+bundle.js:19 No tests/personalizations found  if this is unexpected, check exclusion rules
+160:472  GET https://goli.com/sf_private_access_tokens 401 (Unauthorized)
+(anonymous) @ 160:472
+web-pixel-1448640708@524f6c1ee37bacdca7657a665bdca589.js:1 k-web-pixel-version 1
+web-pixel-933167300@eb8bcf7e5175bbc76632c5239ff97bc7.js:1 referral index check
+web-pixel-933167300@eb8bcf7e5175bbc76632c5239ff97bc7.js:1 Page view data:  {event_name: 'page_view', event: 'page_view', page_location: 'https://goli.com/pages/160#games', page_title: '160 | Goli®', page_referrer: 'https://goli.com/pages/160', …}
+rcart-widget.js:120 SHOPLIFT SCRIPT INITIALIZED!
+rcart-widget.js:120 [Meta Pixel] - Duplicate Pixel ID: 274758730140253.
+(anonymous) @ rcart-widget.js:120
+S @ fbevents.js:182
+E @ fbevents.js:182
+F @ fbevents.js:182
+Oe @ fbevents.js:444
+Ae @ fbevents.js:444
+Ye @ fbevents.js:444
+(anonymous) @ fbevents.js:444
+(anonymous) @ fbevents.js:140
+each @ fbevents.js:336
+value @ fbevents.js:140
+value @ fbevents.js:140
+value @ fbevents.js:128
+plugin @ 274758730140253?v=2.9.324&r=stable&domain=goli.com&hme=af8aa31887db259becaf70277daef60bd8bc35c2df82c2acd4258de27ecac4b5&ex_m=104%2C207%2C155%2C22%2C72%2C73%2C146%2C68%2C67%2C11%2C164%2C90%2C16%2C138%2C127%2C39%2C75%2C78%2C134%2C160%2C166%2C8%2C4%2C5%2C7%2C6%2C3%2C91%2C101%2C167%2C172%2C221%2C62%2C188%2C189%2C55%2C279%2C30%2C74%2C233%2C232%2C231%2C23%2C33%2C103%2C61%2C10%2C63%2C97%2C98%2C99%2C105%2C130%2C31%2C29%2C132%2C133%2C129%2C128%2C156%2C76%2C159%2C157%2C158%2C50%2C60%2C123%2C15%2C163%2C45%2C266%2C267%2C265%2C26%2C27%2C28%2C48%2C147%2C77%2C112%2C18%2C20%2C44%2C40%2C42%2C41%2C83%2C92%2C96%2C110%2C145%2C148%2C46%2C111%2C24%2C21%2C119%2C69%2C36%2C150%2C149%2C151%2C142%2C140%2C25%2C35%2C59%2C109%2C162%2C70%2C17%2C153%2C114%2C81%2C66%2C19%2C85%2C86%2C116%2C84%2C136%2C135%2C139%2C161%2C34%2C281%2C297%2C214%2C203%2C204%2C202%2C300%2C291%2C52%2C215%2C107%2C131%2C80%2C121%2C54%2C47%2C49%2C113%2C120%2C126%2C125%2C58%2C64%2C152%2C115%2C37%2C32%2C53%2C56%2C100%2C165%2C1%2C124%2C14%2C122%2C12%2C2%2C57%2C93%2C65%2C118%2C89%2C88%2C168%2C169%2C94%2C95%2C9%2C102%2C51%2C143%2C87%2C79%2C71%2C117%2C106%2C43%2C144%2C0%2C82%2C137%2C141%2C154%2C38%2C108%2C13%2C170:295
+value @ fbevents.js:238
+e.registerPlugin @ fbevents.js:444
+(anonymous) @ 274758730140253?v=2.9.324&r=stable&domain=goli.com&hme=af8aa31887db259becaf70277daef60bd8bc35c2df82c2acd4258de27ecac4b5&ex_m=104%2C207%2C155%2C22%2C72%2C73%2C146%2C68%2C67%2C11%2C164%2C90%2C16%2C138%2C127%2C39%2C75%2C78%2C134%2C160%2C166%2C8%2C4%2C5%2C7%2C6%2C3%2C91%2C101%2C167%2C172%2C221%2C62%2C188%2C189%2C55%2C279%2C30%2C74%2C233%2C232%2C231%2C23%2C33%2C103%2C61%2C10%2C63%2C97%2C98%2C99%2C105%2C130%2C31%2C29%2C132%2C133%2C129%2C128%2C156%2C76%2C159%2C157%2C158%2C50%2C60%2C123%2C15%2C163%2C45%2C266%2C267%2C265%2C26%2C27%2C28%2C48%2C147%2C77%2C112%2C18%2C20%2C44%2C40%2C42%2C41%2C83%2C92%2C96%2C110%2C145%2C148%2C46%2C111%2C24%2C21%2C119%2C69%2C36%2C150%2C149%2C151%2C142%2C140%2C25%2C35%2C59%2C109%2C162%2C70%2C17%2C153%2C114%2C81%2C66%2C19%2C85%2C86%2C116%2C84%2C136%2C135%2C139%2C161%2C34%2C281%2C297%2C214%2C203%2C204%2C202%2C300%2C291%2C52%2C215%2C107%2C131%2C80%2C121%2C54%2C47%2C49%2C113%2C120%2C126%2C125%2C58%2C64%2C152%2C115%2C37%2C32%2C53%2C56%2C100%2C165%2C1%2C124%2C14%2C122%2C12%2C2%2C57%2C93%2C65%2C118%2C89%2C88%2C168%2C169%2C94%2C95%2C9%2C102%2C51%2C143%2C87%2C79%2C71%2C117%2C106%2C43%2C144%2C0%2C82%2C137%2C141%2C154%2C38%2C108%2C13%2C170:215
+PendingScript
+u @ fbevents.js:176
+j @ fbevents.js:128
+value @ fbevents.js:128
+Oe @ fbevents.js:444
+Ae @ fbevents.js:444
+Ye @ fbevents.js:444
+(anonymous) @ fbevents.js:444
+(anonymous) @ fbevents.js:140
+each @ fbevents.js:336
+value @ fbevents.js:140
+value @ fbevents.js:140
+value @ fbevents.js:128
+plugin @ fbevents.js:456
+value @ fbevents.js:238
+e.registerPlugin @ fbevents.js:444
+(anonymous) @ fbevents.js:447
+PendingScript
+$ @ pixel.modern.js:2
+(anonymous) @ pixel.modern.js:2
+(anonymous) @ pixel.modern.js:2
+(anonymous) @ pixel.modern.js:4
+PendingScript
+(anonymous) @ b34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1
+r @ b34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1
+hi @ b34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1
+await in hi
+E.reduce.ready @ b34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1
+init @ b34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1
+onload @ 160:628
+script
+src @ 160:628
+(anonymous) @ 160:628
+(anonymous) @ 160:628
+(anonymous) @ 160:628
+s34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1 In a sandboxed environment, addEventListener may not behave as expected.
+(anonymous) @ s34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1
+(anonymous) @ pixel.js:1
+(anonymous) @ pixel.js:1
+PendingScript
+(anonymous) @ 160:13
+(anonymous) @ 160:13
+se @ s34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1
+h @ s34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1
+o @ s34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1
+s34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1 In a sandboxed environment, addEventListener may not behave as expected.
+(anonymous) @ s34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1
+l.Qa @ mixpanel-2-latest.min.js:163
+wa @ mixpanel-2-latest.min.js:2
+(anonymous) @ mixpanel-2-latest.min.js:200
+e.h @ mixpanel-2-latest.min.js:36
+(anonymous) @ mixpanel-2-latest.min.js:200
+(anonymous) @ mixpanel-2-latest.min.js:200
+(anonymous) @ mixpanel-2-latest.min.js:201
+PendingScript
+(anonymous) @ 160:11
+(anonymous) @ 160:11
+se @ s34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1
+h @ s34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1
+o @ s34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1
+s34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1 In a sandboxed environment, addEventListener may not behave as expected.
+(anonymous) @ s34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1
+se.init @ amzn.js:2
+(anonymous) @ amzn.js:2
+(anonymous) @ amzn.js:2
+(anonymous) @ amzn.js:2
+PendingScript
+(anonymous) @ 160:26
+(anonymous) @ 160:27
+se @ s34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1
+h @ s34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1
+o @ s34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1
+s34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1 In a sandboxed environment, addEventListener may not behave as expected.
+(anonymous) @ s34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1
+n.addHandlers @ app.js?env=0&:41
+n @ app.js?env=0&:41
+processConfig @ app.js?env=0&:41
+we @ app.js?env=0&:41
+init @ app.js?env=0&:41
+init @ app.js?env=0&:41
+(anonymous) @ app.js?env=0&:44
+PendingScript
+(anonymous) @ 160:114
+(anonymous) @ 160:115
+se @ s34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1
+h @ s34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1
+o @ s34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1
+160:81 custom event {id: 'sh-4ff88387-529F-4295-874A-A1543C82310E', name: 'page_viewed', data: {…}, type: 'standard', timestamp: '2026-05-22T13:55:46.616Z', …}
+s34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1 In a sandboxed environment, addEventListener may not behave as expected.
+(anonymous) @ s34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1
+ed @ gtm.js?id=GTM-KFVD6BG:225
+(anonymous) @ gtm.js?id=GTM-KFVD6BG:386
+(anonymous) @ gtm.js?id=GTM-KFVD6BG:386
+(anonymous) @ gtm.js?id=GTM-KFVD6BG:880
+PendingScript
+(anonymous) @ 160:65
+(anonymous) @ 160:66
+se @ s34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1
+h @ s34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1
+o @ s34f07b34w0f0599d7pa9bdc545m9e2c49ebm.js:1
+VM2423:1 [Intervention] Images loaded lazily and replaced with placeholders. Load events are deferred. See https://go.microsoft.com/fwlink/?linkid=2048113
+rcart-widget.js:120 #games
+boa.js?v=95&tw=1&ga4=0&version=v2&platform=shopify&account_id=1548&b_type_cart=050599e0d6a06508&b_type_visit=a10e8c2fcd3cbd7d&b_type_checkout=4ecb1dc4d0d4ac22&shop=golinutrition.myshopify.com:1 [Violation] Avoid using document.write().
+(anonymous) @ boa.js?v=95&tw=1&ga4=0&version=v2&platform=shopify&account_id=1548&b_type_cart=050599e0d6a06508&b_type_visit=a10e8c2fcd3cbd7d&b_type_checkout=4ecb1dc4d0d4ac22&shop=golinutrition.myshopify.com:1
+p @ boa.js?v=95&tw=1&ga4=0&version=v2&platform=shopify&account_id=1548&b_type_cart=050599e0d6a06508&b_type_visit=a10e8c2fcd3cbd7d&b_type_checkout=4ecb1dc4d0d4ac22&shop=golinutrition.myshopify.com:1
+g @ boa.js?v=95&tw=1&ga4=0&version=v2&platform=shopify&account_id=1548&b_type_cart=050599e0d6a06508&b_type_visit=a10e8c2fcd3cbd7d&b_type_checkout=4ecb1dc4d0d4ac22&shop=golinutrition.myshopify.com:1
+E @ boa.js?v=95&tw=1&ga4=0&version=v2&platform=shopify&account_id=1548&b_type_cart=050599e0d6a06508&b_type_visit=a10e8c2fcd3cbd7d&b_type_checkout=4ecb1dc4d0d4ac22&shop=golinutrition.myshopify.com:1
+await in E
+(anonymous) @ boa.js?v=95&tw=1&ga4=0&version=v2&platform=shopify&account_id=1548&b_type_cart=050599e0d6a06508&b_type_visit=a10e8c2fcd3cbd7d&b_type_checkout=4ecb1dc4d0d4ac22&shop=golinutrition.myshopify.com:1
+Promise.then
+(anonymous) @ boa.js?v=95&tw=1&ga4=0&version=v2&platform=shopify&account_id=1548&b_type_cart=050599e0d6a06508&b_type_visit=a10e8c2fcd3cbd7d&b_type_checkout=4ecb1dc4d0d4ac22&shop=golinutrition.myshopify.com:1
+(anonymous) @ boa.js?v=95&tw=1&ga4=0&version=v2&platform=shopify&account_id=1548&b_type_cart=050599e0d6a06508&b_type_visit=a10e8c2fcd3cbd7d&b_type_checkout=4ecb1dc4d0d4ac22&shop=golinutrition.myshopify.com:1
+(anonymous) @ boa.js?v=95&tw=1&ga4=0&version=v2&platform=shopify&account_id=1548&b_type_cart=050599e0d6a06508&b_type_visit=a10e8c2fcd3cbd7d&b_type_checkout=4ecb1dc4d0d4ac22&shop=golinutrition.myshopify.com:1
+(anonymous) @ boa.js?v=95&tw=1&ga4=0&version=v2&platform=shopify&account_id=1548&b_type_cart=050599e0d6a06508&b_type_visit=a10e8c2fcd3cbd7d&b_type_checkout=4ecb1dc4d0d4ac22&shop=golinutrition.myshopify.com:1
+PendingScript
+asyncLoad @ 160:458
+boa.js?v=95&tw=1&ga4=0&version=v2&platform=shopify&account_id=1548&b_type_cart=050599e0d6a06508&b_type_visit=a10e8c2fcd3cbd7d&b_type_checkout=4ecb1dc4d0d4ac22&shop=golinutrition.myshopify.com:1 [Violation] Avoid using document.write().
+(anonymous) @ boa.js?v=95&tw=1&ga4=0&version=v2&platform=shopify&account_id=1548&b_type_cart=050599e0d6a06508&b_type_visit=a10e8c2fcd3cbd7d&b_type_checkout=4ecb1dc4d0d4ac22&shop=golinutrition.myshopify.com:1
+p @ boa.js?v=95&tw=1&ga4=0&version=v2&platform=shopify&account_id=1548&b_type_cart=050599e0d6a06508&b_type_visit=a10e8c2fcd3cbd7d&b_type_checkout=4ecb1dc4d0d4ac22&shop=golinutrition.myshopify.com:1
+(anonymous) @ boa.js?v=95&tw=1&ga4=0&version=v2&platform=shopify&account_id=1548&b_type_cart=050599e0d6a06508&b_type_visit=a10e8c2fcd3cbd7d&b_type_checkout=4ecb1dc4d0d4ac22&shop=golinutrition.myshopify.com:1
+g @ boa.js?v=95&tw=1&ga4=0&version=v2&platform=shopify&account_id=1548&b_type_cart=050599e0d6a06508&b_type_visit=a10e8c2fcd3cbd7d&b_type_checkout=4ecb1dc4d0d4ac22&shop=golinutrition.myshopify.com:1
+E @ boa.js?v=95&tw=1&ga4=0&version=v2&platform=shopify&account_id=1548&b_type_cart=050599e0d6a06508&b_type_visit=a10e8c2fcd3cbd7d&b_type_checkout=4ecb1dc4d0d4ac22&shop=golinutrition.myshopify.com:1
+await in E
+(anonymous) @ boa.js?v=95&tw=1&ga4=0&version=v2&platform=shopify&account_id=1548&b_type_cart=050599e0d6a06508&b_type_visit=a10e8c2fcd3cbd7d&b_type_checkout=4ecb1dc4d0d4ac22&shop=golinutrition.myshopify.com:1
+Promise.then
+(anonymous) @ boa.js?v=95&tw=1&ga4=0&version=v2&platform=shopify&account_id=1548&b_type_cart=050599e0d6a06508&b_type_visit=a10e8c2fcd3cbd7d&b_type_checkout=4ecb1dc4d0d4ac22&shop=golinutrition.myshopify.com:1
+(anonymous) @ boa.js?v=95&tw=1&ga4=0&version=v2&platform=shopify&account_id=1548&b_type_cart=050599e0d6a06508&b_type_visit=a10e8c2fcd3cbd7d&b_type_checkout=4ecb1dc4d0d4ac22&shop=golinutrition.myshopify.com:1
+(anonymous) @ boa.js?v=95&tw=1&ga4=0&version=v2&platform=shopify&account_id=1548&b_type_cart=050599e0d6a06508&b_type_visit=a10e8c2fcd3cbd7d&b_type_checkout=4ecb1dc4d0d4ac22&shop=golinutrition.myshopify.com:1
+(anonymous) @ boa.js?v=95&tw=1&ga4=0&version=v2&platform=shopify&account_id=1548&b_type_cart=050599e0d6a06508&b_type_visit=a10e8c2fcd3cbd7d&b_type_checkout=4ecb1dc4d0d4ac22&shop=golinutrition.myshopify.com:1
+PendingScript
+asyncLoad @ 160:458
+160#games:1 Clear-Site-Data header on 'https://goli.com/cart/update.js': Cleared data types: "prefetchCache", "prerenderCache".
+rcart-widget.js:120 Targeting has changed: Event {isTrusted: false, key: 'CART_CHANGE', value: {…}, type: 'targeting-changed', target: document, …}
+rcart-widget.js:120 Targeting has changed: Event {isTrusted: false, key: 'CART_CHANGE', value: {…}, type: 'targeting-changed', target: document, …}
+160#games:1 Clear-Site-Data header on 'https://goli.com/cart/update.js': Cleared data types: "prefetchCache", "prerenderCache".
+rcart-widget.js:120 Targeting has changed: Event {isTrusted: false, key: 'CART_CHANGE', value: {…}, type: 'targeting-changed', target: document, …}
+rcart-widget.js:120 Targeting has changed: Event {isTrusted: false, key: 'CART_CHANGE', value: {…}, type: 'targeting-changed', target: document, …}

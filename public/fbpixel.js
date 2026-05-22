@@ -7,8 +7,21 @@
     window.__rcartFbPixelPendingId;
   if (!pixelId) return;
 
-  // Already initialized for this pixel (e.g. script tag re-appended after StrictMode cleanup).
-  if (window.__rcartFbPixelId === pixelId && window.fbq) return;
+  // Already initialized by the widget — nothing to do.
+  if (window.__rcartFbPixelId === pixelId && window.fbq) {
+    console.log('[rcart pixel] already initialized, pixelId:', pixelId);
+    return;
+  }
+
+  // Pixel SDK already loaded by the store (Shopify native pixel, theme, etc.).
+  // Re-calling fbq('init') with the same ID causes a duplicate warning and double-counts events.
+  // Just claim the existing instance so the widget can track against it.
+  if (window.fbq) {
+    console.log('[rcart pixel] store pixel detected, reusing existing fbq, pixelId:', pixelId);
+    window.__rcartFbPixelId = pixelId;
+    delete window.__rcartFbPixelPendingId;
+    return;
+  }
 
   function initializeFacebookPixel(f, b, e, v, n, t, s) {
     if (f.fbq) return;
@@ -37,4 +50,5 @@
   window.fbq("init", pixelId);
   window.__rcartFbPixelId = pixelId;
   delete window.__rcartFbPixelPendingId;
+  console.log('[rcart pixel] initialized, pixelId:', pixelId);
 })();
