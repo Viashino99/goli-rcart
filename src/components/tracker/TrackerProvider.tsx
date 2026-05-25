@@ -2,58 +2,19 @@ import { useEffect, useRef, useState } from "react";
 
 import * as pixel from "../../lib/fbpixel.js";
 
-const ALLOWED_FBPIXEL_HOSTS = ['.shopifycdn.com', '.myshopify.com'];
-
 export type TrackerProviderProps = {
-  /** Same node passed to `createRoot` — reads `data-meta-pixel-id` / `data-fbpixel-src`. */
   widgetRoot?: HTMLElement | null;
 };
-
-/**
- * Shopify: Liquid sets `data-fbpixel-src="{{ 'fbpixel.js' | asset_url }}"` (CDN URL). That file is
- * `extensions/.../assets/fbpixel.js` in the app — not the store's `/pages/...`.
- *
- * Vite dev: `public/fbpixel.js` is only available at the dev origin root as `/fbpixel.js`.
- * Never use `./fbpixel.js` — on `/pages/foo` the browser requests `/pages/fbpixel.js` (404).
- */
-function resolveFbpixelScriptUrl(widgetRoot?: HTMLElement | null): string | null {
-  if (typeof document === "undefined" || typeof window === "undefined") return null;
-
-  const fromBlock =
-    widgetRoot?.dataset.fbpixelSrc?.trim() ??
-    document.getElementById("rcart-widget-root")?.dataset.fbpixelSrc?.trim();
-  if (fromBlock) {
-    try {
-      const { hostname } = new URL(fromBlock);
-      const allowed =
-        hostname === "cdn.shopify.com" ||
-        ALLOWED_FBPIXEL_HOSTS.some((suffix) => hostname.endsWith(suffix));
-      if (!allowed) return null;
-    } catch {
-      return null;
-    }
-    return fromBlock;
-  }
-
-  if (import.meta.env.DEV) {
-    return new URL("/fbpixel.js", window.location.origin).href;
-  }
-  return null;
-}
 
 function readUrlKey(): string {
   if (typeof window === "undefined") return "";
   return `${window.location.pathname}${window.location.search}`;
 }
 
-/** Survives StrictMode remount so we do not remove/re-inject the loader script. */
-let fbpixelScriptInjected = false;
-
-const FacebookPixel = ({ widgetRoot }: { widgetRoot?: HTMLElement | null }) => {
+const FacebookPixel = ({ widgetRoot: _widgetRoot }: { widgetRoot?: HTMLElement | null }) => {
   const [loaded, setLoaded] = useState(false);
   const [urlKey, setUrlKey] = useState(readUrlKey);
-  const widgetRootRef = useRef(widgetRoot);
-  widgetRootRef.current = widgetRoot;
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -68,43 +29,26 @@ const FacebookPixel = ({ widgetRoot }: { widgetRoot?: HTMLElement | null }) => {
   }, []);
 
   useEffect(() => {
-    if (typeof document === "undefined" || typeof window === "undefined") return;
-    const root = widgetRootRef.current;
-    const pixelId = pixel.getFacebookPixelIdFromRoot(root ?? undefined);
-    if (!pixelId) {
-      setLoaded(true);
-      return;
-    }
-    const fbqReady =
-      typeof window.__rcartFbPixelId === "string" &&
-      window.__rcartFbPixelId === pixelId &&
-      typeof window.fbq === "function";
-    if (fbqReady) {
-      setLoaded(true);
-      return;
-    }
-    const src = resolveFbpixelScriptUrl(root);
-    if (!src) {
-      setLoaded(true);
-      return;
-    }
-    if (fbpixelScriptInjected) {
-      setLoaded(true);
-      return;
-    }
-    fbpixelScriptInjected = true;
-    window.__rcartFbPixelPendingId = pixelId;
+    if (typeof window === "undefined") return;
 
-    const script = document.createElement("script");
-    script.src = src;
-    script.async = true;
-    script.setAttribute("data-pixel-id", pixelId);
-    script.onload = () => setLoaded(true);
-    script.onerror = () => setLoaded(true);
-    
-    document.body.appendChild(script);
-    // Do not remove the script on effect cleanup — StrictMode would abort load and
-    // the old boot flag blocked retries before fbevents.js could run.
+    // If the store's pixel (e.g. Shopify Facebook & Instagram app) is already ready, use it.
+    if (typeof window.fbq === "function") {
+      setLoaded(true);
+      return;
+    }
+
+    // Poll until the store initializes fbq — never init it ourselves to avoid duplicate warnings.
+    intervalRef.current = setInterval(() => {
+      if (typeof window.fbq === "function") {
+        clearInterval(intervalRef.current!);
+        intervalRef.current = null;
+        setLoaded(true);
+      }
+    }, 100);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
   }, []);
 
   useEffect(() => {
