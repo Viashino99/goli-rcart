@@ -547,7 +547,7 @@ export function RcartWidget({
         <>
           <SectionGameHero
             PixelId={facebookPixelId}
-            PixelToken=""
+            PixelToken={FB_ACCESS_TOKEN ?? ''}
             partnerCode={partnerCode}
             partnerName={storeName}
             game={heroGame}
