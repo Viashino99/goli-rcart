@@ -109,12 +109,14 @@ const FacebookPixel = ({ widgetRoot }: { widgetRoot?: HTMLElement | null }) => {
 
   useEffect(() => {
     if (!loaded || typeof window === "undefined") return;
+    if (!pixel.isFbqReady()) return;
     const searchParams = new URLSearchParams(window.location.search);
     const queryParams: Record<string, string | null> = {};
     searchParams.forEach((value, key) => {
       queryParams[key] = value;
     });
     pixel.pageview(queryParams);
+    pixel.notifyFbqReady();
   }, [loaded, urlKey]);
 
   return null;

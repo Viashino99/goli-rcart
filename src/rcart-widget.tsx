@@ -128,9 +128,6 @@ function stripEmailAndAccountHashFromUrl(): void {
   window.history.replaceState(null, '', `${url.pathname}${q ? `?${q}` : ''}${url.hash}`);
 }
 
-/** Survives StrictMode dev double-mount so `pageview` is not sent twice. */
-let initialWidgetPageviewSent = false;
-
 export function RcartWidget({
   partnerCode = 'goli',
   email,
@@ -177,12 +174,6 @@ export function RcartWidget({
   const facebookPixelId = pixel.getFacebookPixelId() ?? '';
 
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(!!fromUrl.email);
-
-  useEffect(() => {
-    if (initialWidgetPageviewSent) return;
-    initialWidgetPageviewSent = true;
-    pixel.pageview();
-  }, []);
 
   useEffect(() => {
     

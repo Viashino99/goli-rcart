@@ -1,3 +1,5 @@
+export const RCART_FBQ_READY_EVENT = "rcart-fbq-ready";
+
 declare global {
   interface Window {
     fbq?: (...args: unknown[]) => void;
@@ -5,6 +7,17 @@ declare global {
     __rcartFbPixelPendingId?: string;
     __rcartFbPixelId?: string;
   }
+}
+
+/** True when Meta's stub is on the page (our loader or Shopify sales channel). */
+export function isFbqReady(): boolean {
+  return typeof window !== "undefined" && typeof window.fbq === "function";
+}
+
+/** Dispatched once `fbq` is available — use to send events after async pixel load. */
+export function notifyFbqReady(): void {
+  if (typeof window === "undefined" || !isFbqReady()) return;
+  window.dispatchEvent(new CustomEvent(RCART_FBQ_READY_EVENT));
 }
 
 /** Inlined at `vite build` from `VITE_FACEBOOK_PIXEL_ID` in `.env.local` (goli-rcart default). */
