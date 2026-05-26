@@ -107,17 +107,32 @@ const FacebookPixel = ({ widgetRoot }: { widgetRoot?: HTMLElement | null }) => {
     // the old boot flag blocked retries before fbevents.js could run.
   }, []);
 
-  // useEffect(() => {
-  //   if (!loaded || typeof window === "undefined") return;
-  //   if (!pixel.isFbqReady()) return;
-  //   const searchParams = new URLSearchParams(window.location.search);
-  //   const queryParams: Record<string, string | null> = {};
-  //   searchParams.forEach((value, key) => {
-  //     queryParams[key] = value;
-  //   });
-  //   pixel.pageview(queryParams);
-  //   pixel.notifyFbqReady();
-  // }, [loaded, urlKey]);
+  useEffect(() => {
+    if (!loaded || typeof window === "undefined") return;
+    if (!pixel.isFbqReady()) return;
+    
+    const searchParams = new URLSearchParams(window.location.search);
+    const queryParams: Record<string, string | null> = {};
+    searchParams.forEach((value, key) => {
+      queryParams[key] = value;
+    });
+    
+    // 1. Run your standard app tracking logic
+    pixel.pageview(queryParams);
+    pixel.notifyFbqReady();
+   
+    // 2. FORCE TRIGGER META PIXEL SPECIALLY FOR /pages/160
+    const currentPath = window.location.pathname;
+    if (currentPath.includes('/pages/160') && typeof window.fbq === 'function') {
+      window.fbq('track', 'PageView', {
+        page_path: currentPath,
+        page_title: document.title,
+        page_location: window.location.href
+      });
+    }
+    
+  }, [loaded, urlKey]);
+
 
   return null;
 };
