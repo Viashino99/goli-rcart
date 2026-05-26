@@ -211,7 +211,7 @@ export function RcartWidget({
 
   const gotoGamesPage = () => {
     //TODO: Add shopify logic to redirect to the games page
-    pixel.fbTracker("View Content", {
+    pixel.fbTracker("ViewContent", {
       email: resolvedEmail,
     });
 
@@ -563,7 +563,7 @@ export function RcartWidget({
             onCtaClick={() => {
               // User clicked the game hero CTA
               //TODO: Add shopify tracking here and internal logic.
-              pixel.fbTracker("View Content", {
+              pixel.fbTracker("ViewContent", {
                 ...heroGame
               });
           

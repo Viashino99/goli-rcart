@@ -10,6 +10,22 @@
   // Already initialized for this pixel (e.g. script tag re-appended after StrictMode cleanup).
   if (window.__rcartFbPixelId === pixelId && window.fbq) return;
 
+  // If another integration already initialized this Pixel ID, do not init again.
+  // Meta flags duplicate init calls even if we don't reload fbevents.js.
+  try {
+    const fbq = window.fbq;
+    const state = typeof fbq?.getState === "function" ? fbq.getState() : null;
+    const pixels = Array.isArray(state?.pixels) ? state.pixels : [];
+    const alreadyHasPixel = pixels.some((p) => String(p?.id) === String(pixelId));
+    if (alreadyHasPixel) {
+      window.__rcartFbPixelId = pixelId;
+      delete window.__rcartFbPixelPendingId;
+      return;
+    }
+  } catch {
+    // ignore and proceed
+  }
+
   function initializeFacebookPixel(f, b, e, v, n, t, s) {
     if (f.fbq) return;
     n = f.fbq = function () {
