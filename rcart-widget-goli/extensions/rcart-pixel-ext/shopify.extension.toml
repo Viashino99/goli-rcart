@@ -1,0 +1,9 @@
+name = "rcart-pixel"
+type = "web_pixel"
+
+[settings]
+  [[settings.fields]]
+    key = "pixelId"
+    name = "Meta Pixel ID"
+    description = "Your Meta (Facebook) Pixel ID — found in Meta Events Manager."
+    type = "single_line_text_field"
