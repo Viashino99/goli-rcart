@@ -331,7 +331,7 @@ export function RcartWidget({
 
   const handleLogin = (submittedEmail: string) => {
     if (debugMode) console.error('[DEBUG][handleLogin] called with', submittedEmail);
-    pixel.fbTracker('Complete Registration', { email: submittedEmail });
+    pixel.fbTracker('CompleteRegistration', { email: submittedEmail });
     setResolvedEmail(submittedEmail);
     setIsLoggedIn(true);
     setPendingWelcomeEmail(submittedEmail);
