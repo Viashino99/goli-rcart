@@ -1,0 +1,8 @@
+{
+  "name": "rcart-pixel-ext",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@shopify/web-pixels-extension": "^0.4.0"
+  }
+}

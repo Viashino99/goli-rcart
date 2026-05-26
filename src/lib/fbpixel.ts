@@ -1,5 +1,14 @@
 declare global {
   interface Window {
+    fbq?: ((...args: unknown[]) => void) & {
+      callMethod?: (...args: unknown[]) => void;
+      queue?: unknown[];
+      loaded?: boolean;
+      version?: string;
+      push?: (...args: unknown[]) => void;
+      _fbq?: unknown;
+    };
+    _fbq?: unknown;
     Shopify?: {
       analytics?: {
         publish?: (eventName: string, data?: Record<string, unknown>) => void;
@@ -44,6 +53,58 @@ export const generateEventId = (): string => {
   return crypto.randomUUID();
 };
 
+// Map standard Meta event names to Shopify Customer Events keys
+const META_TO_SHOPIFY_KEY: Record<string, string> = {
+  PageView: "rcart_pageview",
+  ViewContent: "rcart_view_content",
+  CompleteRegistration: "rcart_complete_registration",
+  Lead: "rcart_lead",
+  Purchase: "rcart_purchase",
+};
+
+let fbqInitialized = false;
+
+/**
+ * Lazily load fbevents.js and initialize with the store's pixel ID.
+ * Safe to call multiple times — no-ops after first call.
+ */
+function ensureFbqInitialized(): void {
+  if (typeof window === "undefined" || fbqInitialized) return;
+  fbqInitialized = true;
+
+  const pixelId = getFacebookPixelId();
+  if (!pixelId) return;
+
+  // Stub so queued calls work before fbevents.js finishes loading
+  if (!window.fbq) {
+    const q: unknown[] = [];
+    const fbqStub = function (...args: unknown[]) {
+      const fn = fbqStub as typeof fbqStub & { callMethod?: (...a: unknown[]) => void };
+      fn.callMethod ? fn.callMethod.apply(fn, args) : q.push(args);
+    } as NonNullable<Window["fbq"]>;
+    fbqStub.queue = q;
+    fbqStub.loaded = true;
+    fbqStub.version = "2.0";
+    window.fbq = fbqStub;
+    window._fbq = fbqStub;
+
+    const script = document.createElement("script");
+    script.async = true;
+    script.src = "https://connect.facebook.net/en_US/fbevents.js";
+    const first = document.getElementsByTagName("script")[0];
+    if (first?.parentNode) first.parentNode.insertBefore(script, first);
+  }
+
+  window.fbq!("init", pixelId);
+}
+
+function callFbq(metaEventName: string, payload: Record<string, unknown>, eventID: string): void {
+  ensureFbqInitialized();
+  if (typeof window.fbq === "function") {
+    window.fbq("track", metaEventName, payload, { eventID });
+  }
+}
+
 function trackWithConfiguredPixel(name: string, payload: Record<string, unknown>, eventID: string) {
   if (typeof window === "undefined") return;
 
@@ -65,17 +126,20 @@ function trackWithConfiguredPixel(name: string, payload: Record<string, unknown>
     }
   };
 
-  // Map Meta event name → rcart_* Shopify Customer Events key.
-  // e.g. "View Content" → "rcart_view_content", "Purchase" → "rcart_purchase"
-  const key = `rcart_${name.toLowerCase().replace(/\s+/g, "_")}`;
+  // Client-side: call window.fbq directly (visible in Pixel Helper)
+  callFbq(name, payload, eventID);
+
+  // Server-side: publish to Shopify Customer Events → web pixel extension → sendBeacon → Conversions API
+  const shopifyKey = META_TO_SHOPIFY_KEY[name] ?? `rcart_${name.toLowerCase().replace(/\s+/g, "_")}`;
+  window.Shopify?.analytics?.publish?.(shopifyKey, { data: payload, eventId: eventID });
 
   if (debug) {
     const entry = {
       source: "pixel-dispatch",
       sentAtIso,
-      method: "shopify-analytics-publish",
+      method: "fbq+shopify-analytics",
       eventName: name,
-      key,
+      shopifyKey,
       eventID,
       page: typeof location !== "undefined" ? location.href : "",
       payload,
@@ -83,15 +147,17 @@ function trackWithConfiguredPixel(name: string, payload: Record<string, unknown>
     pushLog(entry);
     console.log("[rcart tracker][dispatch]", entry);
   }
-
-  // Publish to Shopify Customer Events — the rcart-pixel-ext web pixel
-  // subscribes to these and fires fbq inside the Meta-approved sandbox.
-  window.Shopify?.analytics?.publish?.(key, { data: payload, eventId: eventID });
 }
 
 export const pageview = (queryParams: Record<string, unknown> = {}, eventId?: string) => {
   const id = eventId || generateEventId();
   if (typeof window !== "undefined") {
+    // Client-side fbq
+    ensureFbqInitialized();
+    if (typeof window.fbq === "function") {
+      window.fbq("track", "PageView", queryParams, { eventID: id });
+    }
+    // Shopify Customer Events (for web pixel extension / server-side)
     window.Shopify?.analytics?.publish?.("rcart_pageview", { queryParams, eventId: id });
   }
   return id;
