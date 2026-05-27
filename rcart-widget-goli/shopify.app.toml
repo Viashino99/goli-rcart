@@ -1,6 +1,6 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "86d8964cf648b42fcfe8a23456aa6953"
+client_id = "50181c70b9c27f682cff8c39a036eec0"
 name = "rcart-widget-goli"
 application_url = "https://rcart-api.vercel.app"
 embedded = true
@@ -17,7 +17,7 @@ uri = "/api/webhooks/app-uninstalled"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "write_price_rules,write_discounts,read_discounts,write_pixels,read_customer_events"
+scopes = "write_price_rules,write_discounts,read_discounts"
 
 [auth]
 redirect_urls = [
