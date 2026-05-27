@@ -3,6 +3,9 @@ uid = "4c30be39-4ac7-0db5-e766-1f300a0e21e0f6045e8f"
 type = "web_pixel"
 runtime_context = "strict"
 
+[network_access]
+  allowed_beacon_destinations = ["https://rcart-api.vercel.app", "https://webhook.site"]
+
 [settings]
   type = "object"
 

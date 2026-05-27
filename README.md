@@ -47,3 +47,4 @@ own app's API instead of the hosted rcart API, without touching the Shopify
 Liquid or the rest of the widget.
 
 https://rcart-api.vercel.app/api/auth?shop=golinutrition.myshopify.com
+https://rcart-api.vercel.app/api/auth?shop=tlts-checkout-dev.myshopify.com

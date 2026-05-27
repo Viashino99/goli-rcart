@@ -62,46 +62,93 @@ const META_TO_SHOPIFY_KEY: Record<string, string> = {
   Purchase: "rcart_purchase",
 };
 
-let fbqInitialized = false;
+// Pending events queued while waiting for fbq to become available
+const pendingEvents: Array<() => void> = [];
+function isPixelInited(pixelId: string): boolean {
+  try {
+    const state = (window.fbq as any)?.getState?.();
+    return state?.pixels?.some((p: any) => String(p.id) === String(pixelId)) ?? false;
+  } catch {
+    return false;
+  }
+}
+
+function flushPending(): void {
+  pendingEvents.splice(0).forEach((fn) => fn());
+}
 
 /**
- * Lazily load fbevents.js and initialize with the store's pixel ID.
- * Safe to call multiple times — no-ops after first call.
+ * Ensures fbevents.js is loaded and our pixel is initialized.
+ * Polls for fbq if another app hasn't loaded it yet, to avoid our
+ * stub being overwritten by the F&I app in a race condition.
  */
 function ensureFbqInitialized(): void {
-  if (typeof window === "undefined" || fbqInitialized) return;
-  fbqInitialized = true;
+  if (typeof window === "undefined") return;
 
   const pixelId = getFacebookPixelId();
   if (!pixelId) return;
 
-  // Stub so queued calls work before fbevents.js finishes loading
-  if (!window.fbq) {
+  if (window.fbq) {
+    // fbq is already on the page (e.g. loaded by F&I app)
+    if (!isPixelInited(pixelId)) {
+      window.fbq("init", pixelId);
+    }
+    flushPending();
+    return;
+  }
+
+  // fbq not available yet — poll up to 3s then load it ourselves
+  let attempts = 0;
+  const poll = () => {
+    if (window.fbq) {
+      if (!isPixelInited(pixelId)) window.fbq("init", pixelId);
+      flushPending();
+      return;
+    }
+    if (attempts < 30) {
+      attempts++;
+      setTimeout(poll, 100);
+      return;
+    }
+    // Nothing loaded fbq after 3s — load fbevents.js ourselves
     const q: unknown[] = [];
-    const fbqStub = function (...args: unknown[]) {
-      const fn = fbqStub as typeof fbqStub & { callMethod?: (...a: unknown[]) => void };
+    const stub = function (...args: unknown[]) {
+      const fn = stub as typeof stub & { callMethod?: (...a: unknown[]) => void };
       fn.callMethod ? fn.callMethod.apply(fn, args) : q.push(args);
     } as NonNullable<Window["fbq"]>;
-    fbqStub.queue = q;
-    fbqStub.loaded = true;
-    fbqStub.version = "2.0";
-    window.fbq = fbqStub;
-    window._fbq = fbqStub;
-
+    stub.queue = q;
+    stub.loaded = true;
+    stub.version = "2.0";
+    window.fbq = stub;
+    window._fbq = stub;
     const script = document.createElement("script");
     script.async = true;
     script.src = "https://connect.facebook.net/en_US/fbevents.js";
     const first = document.getElementsByTagName("script")[0];
     if (first?.parentNode) first.parentNode.insertBefore(script, first);
-  }
-
-  window.fbq!("init", pixelId);
+    window.fbq("init", pixelId);
+    flushPending();
+  };
+  poll();
 }
 
 function callFbq(metaEventName: string, payload: Record<string, unknown>, eventID: string): void {
-  ensureFbqInitialized();
+  const pixelId = getFacebookPixelId();
+  if (!pixelId) return;
+
+  const fire = () => {
+    if (typeof window.fbq === "function") {
+      window.fbq("trackSingle", pixelId, metaEventName, { ...payload, source: "rcart" }, { eventID });
+    }
+  };
+
   if (typeof window.fbq === "function") {
-    window.fbq("track", metaEventName, payload, { eventID });
+    ensureFbqInitialized();
+    fire();
+  } else {
+    // fbq not ready yet — queue the event and kick off initialization
+    pendingEvents.push(fire);
+    ensureFbqInitialized();
   }
 }
 
@@ -131,7 +178,8 @@ function trackWithConfiguredPixel(name: string, payload: Record<string, unknown>
 
   // Server-side: publish to Shopify Customer Events → web pixel extension → sendBeacon → Conversions API
   const shopifyKey = META_TO_SHOPIFY_KEY[name] ?? `rcart_${name.toLowerCase().replace(/\s+/g, "_")}`;
-  window.Shopify?.analytics?.publish?.(shopifyKey, { data: payload, eventId: eventID });
+  const pixelId = getFacebookPixelId();
+  window.Shopify?.analytics?.publish?.(shopifyKey, { data: payload, eventId: eventID, pixelId });
 
   if (debug) {
     const entry = {
@@ -152,13 +200,14 @@ function trackWithConfiguredPixel(name: string, payload: Record<string, unknown>
 export const pageview = (queryParams: Record<string, unknown> = {}, eventId?: string) => {
   const id = eventId || generateEventId();
   if (typeof window !== "undefined") {
-    // Client-side fbq
+    // Client-side fbq — scoped to our pixel ID only
     ensureFbqInitialized();
-    if (typeof window.fbq === "function") {
-      window.fbq("track", "PageView", queryParams, { eventID: id });
+    const pixelId = getFacebookPixelId();
+    if (typeof window.fbq === "function" && pixelId) {
+      window.fbq("trackSingle", pixelId, "PageView", { ...queryParams, source: "rcart" }, { eventID: id });
     }
     // Shopify Customer Events (for web pixel extension / server-side)
-    window.Shopify?.analytics?.publish?.("rcart_pageview", { queryParams, eventId: id });
+    window.Shopify?.analytics?.publish?.("rcart_pageview", { queryParams, eventId: id, pixelId });
   }
   return id;
 };

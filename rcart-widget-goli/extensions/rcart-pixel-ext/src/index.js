@@ -1,39 +1,55 @@
 import { register } from "@shopify/web-pixels-extension";
 
-// API base — events received here are forwarded to Meta Conversions API server-side.
 const API_BASE = "https://rcart-api.vercel.app";
 
 register(({ analytics, browser, settings }) => {
-  const pixelId = settings.pixelId;
-  if (!pixelId) return;
+  const getFbCookies = async () => {
+    try {
+      const fbp = await browser.cookie.get("_fbp");
+      const fbc = await browser.cookie.get("_fbc");
+      return {
+        ...(fbp?.value ? { fbp: fbp.value } : {}),
+        ...(fbc?.value ? { fbc: fbc.value } : {}),
+      };
+    } catch {
+      return {};
+    }
+  };
 
-  const beacon = (eventName, data) => {
+  const beacon = async (pixelId, eventName, data) => {
+    if (!pixelId) return;
+    const fbCookies = await getFbCookies();
     browser.sendBeacon(
       `${API_BASE}/api/pixel/event`,
-      JSON.stringify({ pixelId, eventName, data }),
+      JSON.stringify({ pixelId, eventName, data: { ...data, ...fbCookies } }),
     );
   };
 
   analytics.subscribe("rcart_pageview", (event) => {
-    beacon("PageView", {
+    const pixelId = event.customData?.pixelId || settings.pixelId;
+    beacon(pixelId, "PageView", {
       queryParams: event.customData?.queryParams ?? {},
       eventId: event.customData?.eventId,
     });
   });
 
   analytics.subscribe("rcart_view_content", (event) => {
-    beacon("ViewContent", { ...(event.customData?.data ?? {}), eventId: event.customData?.eventId });
+    const pixelId = event.customData?.pixelId || settings.pixelId;
+    beacon(pixelId, "ViewContent", { ...(event.customData?.data ?? {}), eventId: event.customData?.eventId });
   });
 
   analytics.subscribe("rcart_complete_registration", (event) => {
-    beacon("CompleteRegistration", { ...(event.customData?.data ?? {}), eventId: event.customData?.eventId });
+    const pixelId = event.customData?.pixelId || settings.pixelId;
+    beacon(pixelId, "CompleteRegistration", { ...(event.customData?.data ?? {}), eventId: event.customData?.eventId });
   });
 
   analytics.subscribe("rcart_lead", (event) => {
-    beacon("Lead", { ...(event.customData?.data ?? {}), eventId: event.customData?.eventId });
+    const pixelId = event.customData?.pixelId || settings.pixelId;
+    beacon(pixelId, "Lead", { ...(event.customData?.data ?? {}), eventId: event.customData?.eventId });
   });
 
   analytics.subscribe("rcart_purchase", (event) => {
-    beacon("Purchase", { ...(event.customData?.data ?? {}), eventId: event.customData?.eventId });
+    const pixelId = event.customData?.pixelId || settings.pixelId;
+    beacon(pixelId, "Purchase", { ...(event.customData?.data ?? {}), eventId: event.customData?.eventId });
   });
 });
