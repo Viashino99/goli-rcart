@@ -493,7 +493,7 @@ export function RcartWidget({
             heroImageSrc={heroImageSrc}
             className={styles.goliHeroSection}
           />
-          <SectionPartneredGames
+         {facebookPixelId && FB_ACCESS_TOKEN && <SectionPartneredGames
               PixelId={facebookPixelId}
               PixelToken={FB_ACCESS_TOKEN ?? ''}
               partnerCode={partnerCode}
@@ -519,7 +519,7 @@ export function RcartWidget({
                   content_category: 'game',
                 });
               }}
-            />
+            />}
           <SectionSteps
             partnerName={storeName}
             partnerCode={partnerCode}
@@ -548,52 +548,52 @@ export function RcartWidget({
         </>
       ) : showPage === 'games' ? (
         <>
-          <SectionGameHero
-            PixelId={facebookPixelId}
-            PixelToken={FB_ACCESS_TOKEN ?? ''}
-            partnerCode={partnerCode}
-            partnerName={storeName}
-            game={heroGame}
-            onCtaClick={() => {
-              // User clicked the game hero CTA
-              //TODO: Add shopify tracking here and internal logic.
-              pixel.fbTracker("ViewContent", {
-                content_ids: [(heroGame as any)?.offerId ?? 'hero-game'],
-                content_type: 'product',
-                content_name: heroGame?.title ?? '',
-              });
-          
-              console.log("Game Hero CTA Clicked!");
-            }}
-            partnerSettings={partnerSettings}
-            bundleAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount) || 0}
-            rewardAmount={Number(rewardAmount) || 0}
-            onLogin={handleLogin}
-            onStartGame={(selectedGame) => {
-              // User clicked the game CTA in the partnered games grid.
-              // TODO: analytics — game_start (source: partnered games)
-              console.log("Game Started!", selectedGame);
-            }}
-            onSelectedGame={(selectedGame) => {
-              // User focused or selected the featured game without necessarily starting it (library-specific interaction).
-              // TODO: analytics — game_selected (source: hero)
-              console.log("Selected Game!", selectedGame);
-            }}
-            onGameCTAClick={(selectedGame) => {
-              // Secondary CTA on the game card in the hero (e.g. “details” / alternate action), not the same as onCtaClick in all themes.
-              // TODO: analytics — game_cta_click (source: hero)
-              console.log("Game CTA Clicked!", selectedGame);
-              pixel.fbTracker("Lead", {
-                ...selectedGame
-              });
-            }}
-            activities={activities || []}
-            maxIncompleteOffers={partnerSettings?.maxIncompleteOffers || 5}
-            refetchOffers={refetch}    
-          />
+            {facebookPixelId && FB_ACCESS_TOKEN && <SectionGameHero
+              PixelId={facebookPixelId}
+              PixelToken={FB_ACCESS_TOKEN ?? ''}
+              partnerCode={partnerCode}
+              partnerName={storeName}
+              game={heroGame}
+              onCtaClick={() => {
+                // User clicked the game hero CTA
+                //TODO: Add shopify tracking here and internal logic.
+                pixel.fbTracker("ViewContent", {
+                  content_ids: [(heroGame as any)?.offerId ?? 'hero-game'],
+                  content_type: 'product',
+                  content_name: heroGame?.title ?? '',
+                });
 
+                console.log("Game Hero CTA Clicked!");
+              }}
+              partnerSettings={partnerSettings}
+              bundleAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount) || 0}
+              rewardAmount={Number(rewardAmount) || 0}
+              onLogin={handleLogin}
+              onStartGame={(selectedGame) => {
+                // User clicked the game CTA in the partnered games grid.
+                // TODO: analytics — game_start (source: partnered games)
+                console.log("Game Started!", selectedGame);
+              }}
+              onSelectedGame={(selectedGame) => {
+                // User focused or selected the featured game without necessarily starting it (library-specific interaction).
+                // TODO: analytics — game_selected (source: hero)
+                console.log("Selected Game!", selectedGame);
+              }}
+              onGameCTAClick={(selectedGame) => {
+                // Secondary CTA on the game card in the hero (e.g. “details” / alternate action), not the same as onCtaClick in all themes.
+                // TODO: analytics — game_cta_click (source: hero)
+                console.log("Game CTA Clicked!", selectedGame);
+                pixel.fbTracker("Lead", {
+                  ...selectedGame
+                });
+              }}
+              activities={activities || []}
+              maxIncompleteOffers={partnerSettings?.maxIncompleteOffers || 5}
+              refetchOffers={refetch}
+            />
+            }
           <div id="rcart-widget-games" style={{ scrollMarginTop: '1rem' }}>
-            <SectionGames
+            {facebookPixelId && FB_ACCESS_TOKEN && <SectionGames
               PixelId={facebookPixelId}
               PixelToken={FB_ACCESS_TOKEN ?? ''}
               partnerCode={partnerCode}
@@ -640,6 +640,7 @@ export function RcartWidget({
               isLoggedIn={isLoggedIn}
               onClaimFirstMilestone={handleFirstMilestoneClaim}
             />
+            }
           </div>
         </>
       ) : null}
