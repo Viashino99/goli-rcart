@@ -32,14 +32,16 @@ export const FB_ACCESS_TOKEN = import.meta.env.VITE_FACEBOOK_ACCESS_TOKEN as str
 export function getFacebookPixelIdFromRoot(
   root: HTMLElement | null | undefined,
 ): string | undefined {
+  const env = FB_PIXEL_ID;
+  if (env && String(env).trim()) return String(env).trim();
+  
   if (root) {
     const meta = root.dataset.metaPixelId?.trim();
     if (meta) return meta;
     const legacy = root.dataset.facebookPixelId?.trim();
     if (legacy) return legacy;
   }
-  const env = FB_PIXEL_ID;
-  if (env && String(env).trim()) return String(env).trim();
+ 
   return undefined;
 }
 
