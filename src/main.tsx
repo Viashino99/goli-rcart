@@ -30,12 +30,64 @@ function safeImageUrl(url: string): string {
   }
 }
 
+function readCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const escaped = name.replace(/([.$?*|{}()[\]\\/+^])/g, '\\$1');
+  const match = document.cookie.match(new RegExp('(?:^|; )' + escaped + '=([^;]*)'));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+/**
+ * getjacked-components builds applike offer redirect links by reading `fbp`/`fbc` from the
+ * page URL query string — it does NOT read the Meta `_fbp`/`_fbc` cookies. Ad/organic traffic
+ * carries attribution as those cookies (and `fbclid` in the URL), so without this seeding the
+ * values never reach the offer redirect → applike `redirectParams` → server-side Meta Purchase
+ * event, hurting match quality.
+ *
+ * Seed the URL once (via replaceState, no reload) from the Meta cookies:
+ *  - `fbp` ← `_fbp` cookie
+ *  - `fbc` ← `_fbc` cookie, or derived from a `fbclid` URL param when the cookie isn't set yet
+ *    (mirrors the Meta pixel's `fb.1.<ts>.<fbclid>` format).
+ * Existing `fbp`/`fbc` query params (e.g. from the ad link) always win and are left untouched.
+ */
+function seedFbAttributionParams(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const url = new URL(window.location.href);
+    const params = url.searchParams;
+    let changed = false;
+
+    if (!params.get('fbp')) {
+      const fbp = readCookie('_fbp');
+      if (fbp) { params.set('fbp', fbp); changed = true; }
+    }
+
+    if (!params.get('fbc')) {
+      let fbc = readCookie('_fbc');
+      if (!fbc) {
+        const fbclid = params.get('fbclid');
+        if (fbclid) fbc = `fb.1.${Date.now()}.${fbclid}`;
+      }
+      if (fbc) { params.set('fbc', fbc); changed = true; }
+    }
+
+    if (changed) {
+      const q = params.toString();
+      window.history.replaceState(null, '', `${url.pathname}${q ? `?${q}` : ''}${url.hash}`);
+    }
+  } catch {
+    /* malformed URL/cookies — skip seeding rather than break mount */
+  }
+}
+
 // Mount function so Shopify theme / app-extension script can call it explicitly.
 // It looks for a container element and reads data attributes as configuration.
 declare const __BUILD_TIME__: string;
 
 export function mountRcartWidget(container: HTMLElement) {
   console.log('[rcart-widget] build:', __BUILD_TIME__);
+  // Must run before getjacked-components renders any offer links so fbp/fbc make it into the redirect.
+  seedFbAttributionParams();
   if (container.id === 'rcart-widget-root') {
     zeroHorizontalPaddingOnNearestPageWidth(container);
   }
