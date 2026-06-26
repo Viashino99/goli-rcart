@@ -25,3 +25,5 @@ rcart-api/.env
 
 # Editor
 .vscode/
+.vercel
+.env*

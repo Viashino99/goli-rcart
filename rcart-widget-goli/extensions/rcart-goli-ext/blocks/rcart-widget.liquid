@@ -1,7 +1,15 @@
 <link rel="stylesheet" href="{{ 'rcart-widget.css' | asset_url }}">
 
+{%- comment -%} Hide the theme's page-title heading so the widget owns the full page. {%- endcomment -%}
+<style>
+  .main-page-title,
+  .page-title,
+  .template-page main .page-width > h1:first-child { display: none !important; }
+</style>
+
 <div
   id="rcart-widget-root"
+  data-css-href="{{ 'rcart-widget.css' | asset_url }}"
   data-partner-code="{{ block.settings.partner_code }}"
   data-store-name="{{ block.settings.store_name | escape }}"
   data-api-url="{{ block.settings.api_url | escape }}"
@@ -13,9 +21,9 @@
   {% if customer %}data-user-id="{{ customer.id | escape }}"{% endif %}
   {% if block.settings.logo_url != blank %}data-logo-src="{{ block.settings.logo_url | image_url: width: 400 | escape }}"{% endif %}
   {% if block.settings.hero_image_url != blank %}data-hero-image-src="{{ block.settings.hero_image_url | image_url: width: 1400 | escape }}"{% endif %}
-  {% if block.settings.step_1_image_url != blank %}data-step1-image="{{ block.settings.step_1_image_url | image_url: width: 800 | escape }}"{% endif %}
-  {% if block.settings.step_2_image_url != blank %}data-step2-image="{{ block.settings.step_2_image_url | image_url: width: 800 | escape }}"{% endif %}
-  {% if block.settings.step_3_image_url != blank %}data-step3-image="{{ block.settings.step_3_image_url | image_url: width: 800 | escape }}"{% endif %}
+  data-step1-image="{% if block.settings.step_1_image_url != blank %}{{ block.settings.step_1_image_url | image_url: width: 800 }}{% else %}https://prod.withrcart.com/goli/step-1-bg.png{% endif %}"
+  data-step2-image="{% if block.settings.step_2_image_url != blank %}{{ block.settings.step_2_image_url | image_url: width: 800 }}{% else %}https://prod.withrcart.com/goli/step-2-bg.png{% endif %}"
+  data-step3-image="{% if block.settings.step_3_image_url != blank %}{{ block.settings.step_3_image_url | image_url: width: 800 }}{% else %}https://prod.withrcart.com/goli/step-3-bg.png{% endif %}"
 ></div>
 
 <script src="{{ 'rcart-widget.js' | asset_url }}" defer></script>

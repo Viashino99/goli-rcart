@@ -1,0 +1,6 @@
+{
+  "installCommand": "echo skip-install",
+  "buildCommand": "echo skip-build",
+  "outputDirectory": "dist-app",
+  "framework": null
+}
