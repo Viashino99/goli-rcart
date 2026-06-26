@@ -2,7 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { ThemeProvider } from 'getjacked-components';
 import 'getjacked-components/style.css';
-import './widget-tailwind.css';
 import { RcartWidget } from './rcart-widget';
 import TrackerProvider from './components/tracker/TrackerProvider';
 
@@ -36,10 +35,7 @@ function safeImageUrl(url: string): string {
 declare const __BUILD_TIME__: string;
 
 export function mountRcartWidget(container: HTMLElement) {
-  // console.error (not .log) so it survives the production build's console-stripping — lets us
-  // confirm WHICH build is actually live on the storefront. Also stamped on the DOM node.
-  console.error('[rcart-widget] BUILD:', __BUILD_TIME__);
-  container.setAttribute('data-rcart-build', __BUILD_TIME__);
+  console.log('[rcart-widget] build:', __BUILD_TIME__);
   if (container.id === 'rcart-widget-root') {
     zeroHorizontalPaddingOnNearestPageWidth(container);
   }
@@ -62,14 +58,10 @@ export function mountRcartWidget(container: HTMLElement) {
     safeImageUrl(dataset.step3Image || ''),
   ];
 
-  // Render in the light DOM (no shadow). Theme isolation is handled purely by CSS: every Tailwind
-  // utility is `!important` (see tailwind.config.js) so it beats the host theme's CSS regardless of
-  // cascade layers, and the reset is scoped to `#rcart-widget-root`. This is the gorgeous light-DOM
-  // render, with the theme override baked in.
   const root = ReactDOM.createRoot(container);
   root.render(
     <React.StrictMode>
-      <ThemeProvider defaultMode="light">
+      <ThemeProvider defaultMode="system">
         <TrackerProvider />
         <RcartWidget
           partnerCode={partnerCode}

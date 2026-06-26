@@ -1,11 +1,10 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
 
 // Vite config for building a standalone widget bundle that can be
 // embedded into a Shopify Online Store 2.0 theme or theme app extension.
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react()],
   define: {
     'process.env.NODE_ENV': '"production"',
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
@@ -19,10 +18,6 @@ export default defineConfig({
   build: {
     cssCodeSplit: false,
     sourcemap: false,
-    // Inline the hero JPEG (~104KB) as a data URI so the IIFE stays fully self-contained —
-    // theme-app-extension assets are served from a Shopify CDN path the bundled import can't
-    // resolve at runtime, so a separate emitted image file would 404 on the storefront.
-    assetsInlineLimit: 200_000,
     lib: {
       entry: 'src/main.tsx',
       name: 'RcartWidget',

@@ -1,18 +1,19 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  SectionHero,
   SectionGames,
   SectionGameHero,
   SectionSteps,
   SectionTestimonials,
   SectionFaq,
   useLogout,
-  HeroSection,
-  GamesSection,
+  SectionPartneredGames
 } from 'getjacked-components';
 import { StorefrontHeader } from './components/storefront-header';
 import { useRcartGameApi } from './use-rcart-game-api';
 import * as pixel from "./lib/fbpixel";
 import { FB_ACCESS_TOKEN } from "./lib/fbpixel";
+import styles from './components/storefront-header/StorefrontHeader.module.css';
 
 export type RcartWidgetProps = {
   partnerCode: string;
@@ -47,8 +48,8 @@ const WELCOME_NOTIFY_MILESTONE: NotifyMilestonePayload = {
   icon: 'welcome',
   label: 'Welcome',
   status: 'earned',
-  ctaText: "Unlock $175 now",
-  calloutText: "Unlock $175 now",
+  ctaText: "Unlock $160 now",
+  calloutText: "Unlock $160 now",
 };
 
 function isGamesHash(): boolean {
@@ -73,7 +74,7 @@ function pickSessionAccountHash(sessionUser: unknown): string | null {
   return t.length > 0 ? t : null;
 }
 
-/** API: id 1 = install / surprise gift ($25), id 2 = bundle goal ($175). Falls back to comparing targetAmount against the bundle threshold. */
+/** API: id 1 = install / surprise gift ($25), id 2 = bundle goal ($150). Falls back to comparing targetAmount against the bundle threshold. */
 function earnedMilestoneTier(
   m: { id?: unknown; targetAmount?: unknown },
   rewardGoal?: { targetAmount?: unknown; thresholdAmount?: unknown },
@@ -169,89 +170,12 @@ export function RcartWidget({
   const logoSrc = logoSrcProp;
   const heroImageSrc = heroImageSrcProp;
   const brandLabel = storeName?.trim() ? storeName : '';
-
-  // --- RCart reward overhaul (dev-store UI preview) -------------------------------
-  // Staged single-pane: once the shopper has 5 confirmed installs, the flow swaps from
-  // "install games" to "my activity" (downfunnel). Display amounts are overridden to the
-  // new model ($5/install, Tier 1 "Surprise Gift" $25 at 5 installs, each downfunnel +$50,
-  // Tier 2 total $175) so the preview reads correctly without touching the live
-  // partner_setting. Mint stays host-side.
-  const INSTALL_REWARD = 5;
-  const INSTALL_THRESHOLD = 5;
-  const installGoal = INSTALL_THRESHOLD * INSTALL_REWARD; // $25 — first reward tier
-  const BUNDLE_AMOUNT = 175; // $25 install tier + 3 downfunnel x $50 — DISPLAY total only
-  // We mint TWO separate coupons: $25 (first/install) + $150 (second). $25 + $150 = $175 total.
-  // BUNDLE_AMOUNT (175) is the displayed total; the actual SECOND code we mint is $150.
-  const SECOND_CODE_AMOUNT = 150;
-  const installsCount = (activities ?? []).filter((a) => a?.installed).length;
-  const inActivityStage = installsCount >= INSTALL_THRESHOLD;
-  const completionsCount = (activities ?? []).filter(
-    (a) => a?.steps?.length > 0 && a.steps[a.steps.length - 2]?.status === "completed",
-  ).length;
-  const effectiveRewardAmount =
-    Math.min(installsCount, INSTALL_THRESHOLD) * INSTALL_REWARD + completionsCount * 50;
-  const effectivePartnerSettings = partnerSettings
-    ? {
-        ...partnerSettings,
-        installPoints: INSTALL_REWARD,
-        rewardGoal: {
-          ...partnerSettings.rewardGoal,
-          thresholdAmount: BUNDLE_AMOUNT,
-          discount: String(BUNDLE_AMOUNT),
-        },
-        milestones: [
-          { targetAmount: installGoal, label: `$${installGoal} Goli Cash`, icon: "gift" as const },
-          { targetAmount: BUNDLE_AMOUNT, label: `$${BUNDLE_AMOUNT} Goli Cash`, icon: "dollar" as const },
-        ].map((m, i) => {
-          // Demo economics drive milestone state locally: tier 1 ($25) earns at 5 installs,
-          // tier 2 ($175 cumulative) at 3 downfunnel completions. The live partner_setting
-          // uses different thresholds (3 installs / $15 / $160) which we intentionally ignore.
-          const reached = i === 0 ? installsCount >= INSTALL_THRESHOLD : completionsCount >= 3;
-          const serverStatus = partnerSettings.milestones?.[i]?.status;
-          return {
-            id: partnerSettings.milestones?.[i]?.id ?? String(i + 1),
-            status: serverStatus === "claimed" ? "claimed" : reached ? "earned" : ("locked" as const),
-            price: partnerSettings.milestones?.[i]?.price,
-            ...m,
-          };
-        }),
-      }
-    : partnerSettings;
-
-  // Same data transform the harness applies: surface each game's price as the $5 install
-  // reward, and rewrite step prices to the new model (step 0 = $5 install, step 1 = $50
-  // downfunnel) so ModalGame / cards read the right amounts instead of raw API values.
-  const displayGames = (games ?? []).map((g) => ({
-    ...g,
-    price: INSTALL_REWARD,
-    steps: (g.steps ?? []).map((s, i) => ({
-      ...s,
-      price: i === 0 ? INSTALL_REWARD : i === 1 ? 50 : s.price ?? 0,
-    })),
-  }));
-  const heroGame = displayGames[0];
-  const gameList = displayGames.slice(1);
-  // Activities are the user's in-progress games; apply the same $5/$50 step rewrite so the
-  // activity cards show the new downfunnel economics (+$50) instead of raw API values, and
-  // surface each activity's earned total as the sum of its completed (rewritten) step prices.
-  const displayActivities = (activities ?? []).map((a) => {
-    const steps = (a.steps ?? []).map((s, i) => ({
-      ...s,
-      price: i === 0 ? INSTALL_REWARD : i === 1 ? 50 : s.price ?? 0,
-    }));
-    const earned = steps.reduce(
-      (sum, s) => sum + (s.status === "completed" ? Number(s.price) || 0 : 0),
-      0,
-    );
-    return { ...a, price: earned, steps };
-  });
-  // -------------------------------------------------------------------------------
+  const heroGame = games?.[0];
+  const gameList = games?.slice(1);
 
   const facebookPixelId = pixel.getFacebookPixelId() ?? '';
 
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(!!fromUrl.email);
-  // Bumped by the header "Log in" button to open SectionGames' email/login modal.
-  const [loginSignal, setLoginSignal] = useState(0);
 
   useEffect(() => {
     if (initialWidgetPageviewSent) return;
@@ -435,8 +359,8 @@ export function RcartWidget({
 
     const tier = earnedMilestoneTier(earned, partnerSettings?.rewardGoal ?? undefined);
     if (!tier) return null;
-
-    const discountAmount = tier === 'install' ? installGoal : SECOND_CODE_AMOUNT;
+  
+    const discountAmount: number = tier === 'install' ? 25 : 150;
     const discount = await callDiscountApi(discountAmount);
     if (!discount) return null;
 
@@ -461,8 +385,8 @@ export function RcartWidget({
         void callNotifyApiRef.current({
           id: 'first-reward',
           icon: 'dollar',
-          label: `$${installGoal} Goli Cash`,
-          targetAmount: installGoal,
+          label: 'Surprise Gift — $25 off',
+          targetAmount: 25,
           status: 'claimed',
           discountCode: code,
         });
@@ -472,8 +396,8 @@ export function RcartWidget({
         void callNotifyApiRef.current({
           id: 'goal-reached',
           icon: 'dollar',
-          label: `Bundle Goal Reached — $${SECOND_CODE_AMOUNT} off`,
-          targetAmount: SECOND_CODE_AMOUNT,
+          label: 'Bundle Goal Reached — $150 off',
+          targetAmount: 150,
           status: 'claimed',
           discountCode: code,
         });
@@ -534,12 +458,12 @@ export function RcartWidget({
             <button
               onClick={async () => {
                 setDebugStatus('requesting discount code…');
-                const result = await callDiscountApi(installGoal);
+                const result = await callDiscountApi(5);
                 setDebugStatus(result ? `✅ code: ${result.code}${result.reused ? ' (reused)' : ''}` : '❌ no code returned — check console');
               }}
               style={{ background: '#444', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 12px', cursor: 'pointer', fontFamily: 'monospace' }}
             >
-              Test ${installGoal} Discount
+              Test $5 Discount
             </button>
           </div>
           {debugStatus && <div style={{ marginTop: 8, color: '#ffd700' }}>{debugStatus}</div>}
@@ -553,49 +477,49 @@ export function RcartWidget({
         logoAlt={brandLabel}
         isLoggedIn={!!isLoggedIn}
         onCtaClick={gotoGamesPage}
-        onLoginClick={() => setLoginSignal((s) => s + 1)}
-        rewardAmount={effectiveRewardAmount || 0}
-        partnerSettings={effectivePartnerSettings}
+        rewardAmount={rewardAmount || 0}
+        partnerSettings={partnerSettings}
         discountCode={discountCode || ""}
         onLogout={handleLogout}
         onGenerateDiscountCode={handleGenerateBundleCode}
         onClaimFirstMilestone={handleFirstMilestoneClaim}
         onClaimLastMilestone={handleLastMilestoneClaim}
         islanding={showPage === 'landing' ? true : false}
-        ctaLabel={"Get $" + (loading ? 0 : effectivePartnerSettings?.rewardGoal?.thresholdAmount || 0)}
-        installsCount={installsCount}
-        completionsCount={completionsCount}
-        installThreshold={INSTALL_THRESHOLD}
-        installRewardPerGame={INSTALL_REWARD}
-        downfunnelThreshold={3}
-        bundleAmount={BUNDLE_AMOUNT}
+        ctaLabel={"Unlock " + "$"+ (loading ? 0 : partnerSettings?.rewardGoal?.thresholdAmount || 0) + " now"}
       />
 
       {showPage === 'landing' ? (
         <>
-          <HeroSection
-            bundleAmount={BUNDLE_AMOUNT}
-            installGoal={installGoal}
-            heroImageSrc={heroImageSrc}
+          <SectionHero
+            storeName={storeName}
+            bundleAmount={partnerSettings?.rewardGoal?.thresholdAmount ?? rewardAmount}
+            discountAmount={partnerSettings?.rewardGoal?.discount}
             onCTAClick={gotoGamesPage}
+            to="#games"
+            heroImageSrc={heroImageSrc}
+            className={styles.goliHeroSection}
           />
-          <GamesSection
-            games={displayGames}
-            installGoal={installGoal}
-            bundleAmount={BUNDLE_AMOUNT}
-            onPlay={(g) => {
-              // Navigate to #games and let SectionGames open its OWN install modal (with QR +
-              // full tracking) for this game — it reads the `gj_game_modal=<offerId>` deep-link
-              // param on mount. This is the exact same modal you'd get clicking from the games page.
-              if (typeof window !== 'undefined' && g.offerId) {
-                const url = new URL(window.location.href);
-                url.searchParams.set('gj_game_modal', g.offerId);
-                window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
-              }
-              gotoGamesPage();
-            }}
-            onBrowse={gotoGamesPage}
-          />
+          <SectionPartneredGames
+              PixelId={facebookPixelId}
+              PixelToken={FB_ACCESS_TOKEN ?? ''}
+              partnerCode={partnerCode}
+              partnerName={storeName}
+              maxIncompleteOffers={partnerSettings?.maxIncompleteOffers || 5}
+              bundleAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount) || 0}
+              rewardAmount={Number(rewardAmount) || 0}
+              activities={activities || []}
+              partnerSettings={partnerSettings}
+              onLogin={handleLogin}
+              onBrowse={gotoGamesPage}
+              to="#games"
+              isLoggedIn={isLoggedIn}
+              refetchOffers={refetch}
+              onStartGame={(selectedGame) => {
+                // User clicked the game CTA in the partnered games grid.
+                // TODO: analytics — game_start (source: partnered games)
+                console.log("Game Started!", selectedGame);
+              }}
+            />
           <SectionSteps
             partnerName={storeName}
             partnerCode={partnerCode}
@@ -607,20 +531,11 @@ export function RcartWidget({
             ctaText="Start Playing"
             onCTAClick={gotoGamesPage}
             to="#games"
-            bundleAmount={BUNDLE_AMOUNT}
-            discountAmount={BUNDLE_AMOUNT}
-            installAmount={INSTALL_REWARD}
-            levelUpAmount={50}
+            bundleAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount) || 0}
+            discountAmount={Number(partnerSettings?.rewardGoal?.discount) || 0}
+            installAmount={5}
+            levelUpAmount={145}
           />
-          {/* "How It Works" — relocated below "How to Maximize Your Cash" (SectionSteps). */}
-          <div className="bg-white px-4 py-8 flex justify-center font-sans">
-            <div className="border border-black/15 rounded-md p-4 max-w-[900px] w-full">
-              <p className="text-[#1a1a2e] text-[14px] md:text-[15px] leading-[1.5] text-center">
-                <span className="font-bold">How It Works: </span>
-                Install {INSTALL_THRESHOLD} games → get ${installGoal}. Keep playing → unlock up to ${BUNDLE_AMOUNT}.
-              </p>
-            </div>
-          </div>
           <SectionFaq
             partnerCode={partnerCode}
             partnerName={storeName}
@@ -633,7 +548,6 @@ export function RcartWidget({
         </>
       ) : showPage === 'games' ? (
         <>
-          {!inActivityStage && (
           <SectionGameHero
             PixelId={facebookPixelId}
             PixelToken=""
@@ -649,9 +563,9 @@ export function RcartWidget({
           
               console.log("Game Hero CTA Clicked!");
             }}
-            partnerSettings={effectivePartnerSettings}
-            bundleAmount={Number(effectivePartnerSettings?.rewardGoal?.thresholdAmount) || 0}
-            rewardAmount={Number(effectiveRewardAmount) || 0}
+            partnerSettings={partnerSettings}
+            bundleAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount) || 0}
+            rewardAmount={Number(rewardAmount) || 0}
             onLogin={handleLogin}
             onStartGame={(selectedGame) => {
               // User clicked the game CTA in the partnered games grid.
@@ -668,26 +582,22 @@ export function RcartWidget({
               // TODO: analytics — game_cta_click (source: hero)
               console.log("Game CTA Clicked!", selectedGame);
             }}
-            activities={displayActivities}
+            activities={activities || []}
             maxIncompleteOffers={partnerSettings?.maxIncompleteOffers || 5}
-            refetchOffers={refetch}
+            refetchOffers={refetch}    
           />
-          )}
 
           <div id="rcart-widget-games" style={{ scrollMarginTop: '1rem' }}>
             <SectionGames
-              stagedSinglePane
-              installThreshold={INSTALL_THRESHOLD}
               PixelId={facebookPixelId}
               PixelToken={FB_ACCESS_TOKEN ?? ''}
               partnerCode={partnerCode}
               partnerName={storeName}
               maxIncompleteOffers={partnerSettings?.maxIncompleteOffers || 5}
-              partnerSettings={effectivePartnerSettings}
-              rewardAmount={Number(effectiveRewardAmount) || 0}
-              bundleAmount={Number(effectivePartnerSettings?.rewardGoal?.thresholdAmount) || 0}
+              partnerSettings={partnerSettings}
+              rewardAmount={Number(rewardAmount) || 0}
+              bundleAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount) || 0}
               onLogin={handleLogin}
-              openLoginSignal={loginSignal}
               onStartGame={(selectedGame) => {
                 // User clicked the game CTA in the games grid.
                 // TODO: analytics — game_start (source: games)
@@ -713,7 +623,7 @@ export function RcartWidget({
                 console.log("Games tab changed:", tab);
               }}
               games={gameList}
-              activities={displayActivities}
+              activities={activities}
               loading={loading}
               error={error}
               refetchOffers={refetch}
