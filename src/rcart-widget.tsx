@@ -48,8 +48,8 @@ const WELCOME_NOTIFY_MILESTONE: NotifyMilestonePayload = {
   icon: 'welcome',
   label: 'Welcome',
   status: 'earned',
-  ctaText: "Unlock $160 now",
-  calloutText: "Unlock $160 now",
+  ctaText: "Unlock $175 now",
+  calloutText: "Unlock $175 now",
 };
 
 function isGamesHash(): boolean {
@@ -522,6 +522,7 @@ export function RcartWidget({
               partnerSettings={partnerSettings}
               onLogin={handleLogin}
               onBrowse={gotoGamesPage}
+              onGameModalClose={gotoGamesPage}
               to="#games"
               isLoggedIn={isLoggedIn}
               refetchOffers={refetch}
@@ -545,7 +546,7 @@ export function RcartWidget({
             bundleAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount) || 0}
             discountAmount={Number(partnerSettings?.rewardGoal?.discount) || 0}
             installAmount={5}
-            levelUpAmount={145}
+            levelUpAmount={50}
           />
           <SectionFaq
             partnerCode={partnerCode}
@@ -643,6 +644,8 @@ export function RcartWidget({
               onGenerateDiscountCodeBundle={handleGenerateBundleCode}
               redirectUrl="/collections/all"
               isLoggedIn={isLoggedIn}
+              stagedSinglePane
+              installThreshold={5}
               openLoginSignal={loginSignal}
               onClaimFirstMilestone={handleFirstMilestoneClaim}
             />
