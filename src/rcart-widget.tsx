@@ -413,9 +413,9 @@ export function RcartWidget({
     return code;
   };
 
-  // SectionGames → ModalSurpriseGift (JM): called for the install/first ($5) milestone.
+  // SectionGames → ModalSurpriseGift: called for the install/first ($25) milestone.
   const handleGenerateDiscountCode = () => generateCodeForTier(false);
-  // StorefrontHeader → ProgressRewards → Xl: called only when the bundle ($100) milestone is earned.
+  // StorefrontHeader → StagedProgressBar: called only when the bundle ($150) milestone is earned.
   const handleGenerateBundleCode = () => generateCodeForTier(true);
 
   // These are called by ProgressRewards / ModalSurpriseGift when the user clicks
@@ -469,7 +469,7 @@ export function RcartWidget({
               }}
               style={{ background: '#444', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 12px', cursor: 'pointer', fontFamily: 'monospace' }}
             >
-              Test $5 Discount
+              Test $25 Discount
             </button>
           </div>
           {debugStatus && <div style={{ marginTop: 8, color: '#ffd700' }}>{debugStatus}</div>}
