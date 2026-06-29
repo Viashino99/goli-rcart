@@ -151,7 +151,7 @@ export function RcartWidget({
   );
   const [discountCode, setDiscountCode] = useState<string | null>(null);
   const [pendingWelcomeEmail, setPendingWelcomeEmail] = useState<string | null>(null);
-  // Bumped by the header "Log in" button; passed to SectionGameHero (openLoginSignal) to open the email prompt.
+  // Bumped by the header "Log in" button; passed to SectionGames (openLoginSignal) to open the email prompt.
   const [loginSignal, setLoginSignal] = useState(0);
 
   const { logout } = useLogout();
@@ -578,7 +578,6 @@ export function RcartWidget({
             bundleAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount) || 0}
             rewardAmount={Number(rewardAmount) || 0}
             onLogin={handleLogin}
-            openLoginSignal={loginSignal}
             onStartGame={(selectedGame) => {
               // User clicked the game CTA in the partnered games grid.
               // TODO: analytics — game_start (source: partnered games)
@@ -644,6 +643,7 @@ export function RcartWidget({
               onGenerateDiscountCodeBundle={handleGenerateBundleCode}
               redirectUrl="/collections/all"
               isLoggedIn={isLoggedIn}
+              openLoginSignal={loginSignal}
               onClaimFirstMilestone={handleFirstMilestoneClaim}
             />
           </div>
