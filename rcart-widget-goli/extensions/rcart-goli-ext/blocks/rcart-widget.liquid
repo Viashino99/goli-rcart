@@ -12,10 +12,10 @@
   {% if customer %}data-email="{{ customer.email | escape }}"{% endif %}
   {% if customer %}data-user-id="{{ customer.id | escape }}"{% endif %}
   {% if block.settings.logo_url != blank %}data-logo-src="{{ block.settings.logo_url | image_url: width: 400 | escape }}"{% endif %}
-  {% if block.settings.hero_image_url != blank %}data-hero-image-src="{{ block.settings.hero_image_url | image_url: width: 1400 | escape }}"{% endif %}
-  {% if block.settings.step_1_image_url != blank %}data-step1-image="{{ block.settings.step_1_image_url | image_url: width: 800 | escape }}"{% endif %}
-  {% if block.settings.step_2_image_url != blank %}data-step2-image="{{ block.settings.step_2_image_url | image_url: width: 800 | escape }}"{% endif %}
-  {% if block.settings.step_3_image_url != blank %}data-step3-image="{{ block.settings.step_3_image_url | image_url: width: 800 | escape }}"{% endif %}
+  data-hero-image-src="{% if block.settings.hero_image_url != blank %}{{ block.settings.hero_image_url | image_url: width: 1400 }}{% else %}https://prod.withrcart.com/goli/goli-new-hero.png{% endif %}"
+  data-step1-image="{% if block.settings.step_1_image_url != blank %}{{ block.settings.step_1_image_url | image_url: width: 800 }}{% else %}https://prod.withrcart.com/goli/step-1-bg.png{% endif %}"
+  data-step2-image="{% if block.settings.step_2_image_url != blank %}{{ block.settings.step_2_image_url | image_url: width: 800 }}{% else %}https://prod.withrcart.com/goli/step-2-bg.png{% endif %}"
+  data-step3-image="{% if block.settings.step_3_image_url != blank %}{{ block.settings.step_3_image_url | image_url: width: 800 }}{% else %}https://prod.withrcart.com/goli/step-3-bg.png{% endif %}"
 ></div>
 
 <script src="{{ 'rcart-widget.js' | asset_url }}" defer></script>
