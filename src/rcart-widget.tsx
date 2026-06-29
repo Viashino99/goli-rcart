@@ -151,6 +151,8 @@ export function RcartWidget({
   );
   const [discountCode, setDiscountCode] = useState<string | null>(null);
   const [pendingWelcomeEmail, setPendingWelcomeEmail] = useState<string | null>(null);
+  // Bumped by the header "Log in" button; passed to SectionGameHero (openLoginSignal) to open the email prompt.
+  const [loginSignal, setLoginSignal] = useState(0);
 
   const { logout } = useLogout();
   const { games, activities, partnerSettings, rewardAmount, loading, error, sessionUser, isNew, refetch } = useRcartGameApi({
@@ -483,6 +485,7 @@ export function RcartWidget({
         logoAlt={brandLabel}
         isLoggedIn={!!isLoggedIn}
         onCtaClick={gotoGamesPage}
+        onLoginClick={() => setLoginSignal((s) => s + 1)}
         rewardAmount={rewardAmount || 0}
         partnerSettings={partnerSettings}
         installsCount={installsCount}
@@ -575,6 +578,7 @@ export function RcartWidget({
             bundleAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount) || 0}
             rewardAmount={Number(rewardAmount) || 0}
             onLogin={handleLogin}
+            openLoginSignal={loginSignal}
             onStartGame={(selectedGame) => {
               // User clicked the game CTA in the partnered games grid.
               // TODO: analytics — game_start (source: partnered games)

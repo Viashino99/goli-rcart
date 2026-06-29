@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { ThemeProvider } from 'getjacked-components';
 import 'getjacked-components/style.css';
+import './widget-tailwind.css';
 import { RcartWidget } from './rcart-widget';
 import TrackerProvider from './components/tracker/TrackerProvider';
 

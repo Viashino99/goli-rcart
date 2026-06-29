@@ -25,6 +25,7 @@ export type StorefrontHeaderProps = {
   discountCode?: string;
   islanding?: boolean;
   onCtaClick?: () => void;
+  onLoginClick?: () => void;
   onLogout?: () => void;
   onGenerateDiscountCode?: OnGenerateDiscountCode;
   onClaimFirstMilestone?: () => void;
@@ -67,6 +68,7 @@ export function StorefrontHeader({
   logoAlt,
   ctaLabel = 'Start Earning Now',
   onCtaClick,
+  onLoginClick,
   className,
   style,
   isLoggedIn,
@@ -114,12 +116,15 @@ export function StorefrontHeader({
                   borderColor="#1e1e1e"
                 />
               </>
+            ) : islanding ? (
+              <button type="button" className={styles.cta} onClick={onCtaClick}>
+                {ctaLabel}
+              </button>
             ) : (
-              islanding && (
-                <button type="button" className={styles.cta} onClick={onCtaClick}>
-                  {ctaLabel}
-                </button>
-              )
+              // Games page, logged out: a Log in button that opens the email prompt (which logs them in).
+              <button type="button" className={styles.loginBtn} onClick={onLoginClick}>
+                Log in
+              </button>
             )}
           </div>
         </div>

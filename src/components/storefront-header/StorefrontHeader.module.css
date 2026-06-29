@@ -120,6 +120,24 @@
   color: #000;
 }
 
+.loginBtn {
+  padding: 8px 18px;
+  background: transparent;
+  color: #1e1e1e;
+  border: 1px solid #1e1e1e;
+  font-weight: 700;
+  font-size: 14px;
+  border-radius: 0;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.loginBtn:hover {
+  background: #1e1e1e;
+  color: #fff;
+}
+
 .cta {
   padding: 10px 20px;
   background-color: #000;
