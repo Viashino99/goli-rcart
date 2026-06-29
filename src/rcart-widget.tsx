@@ -173,6 +173,12 @@ export function RcartWidget({
   const heroGame = games?.[0];
   const gameList = games?.slice(1);
 
+  // Counts that drive the StagedProgressBar gold bar (installed games / completed downfunnels).
+  const installsCount = (activities ?? []).filter((a: any) => a?.installed).length;
+  const completionsCount = (activities ?? []).filter(
+    (a: any) => (a?.steps?.length ?? 0) > 0 && a.steps[a.steps.length - 2]?.status === 'completed',
+  ).length;
+
   const facebookPixelId = pixel.getFacebookPixelId() ?? '';
 
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(!!fromUrl.email);
@@ -479,6 +485,8 @@ export function RcartWidget({
         onCtaClick={gotoGamesPage}
         rewardAmount={rewardAmount || 0}
         partnerSettings={partnerSettings}
+        installsCount={installsCount}
+        completionsCount={completionsCount}
         discountCode={discountCode || ""}
         onLogout={handleLogout}
         onGenerateDiscountCode={handleGenerateBundleCode}

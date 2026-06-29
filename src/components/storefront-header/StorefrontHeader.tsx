@@ -1,6 +1,6 @@
 import React, { type ReactNode } from 'react';
 import styles from './StorefrontHeader.module.css';
-import { OnGenerateDiscountCode, ProgressAmount, ProgressRewards } from 'getjacked-components';
+import { OnGenerateDiscountCode, ProgressAmount, StagedProgressBar } from 'getjacked-components';
 
 
 export type StorefrontHeaderProps = {
@@ -20,6 +20,8 @@ export type StorefrontHeaderProps = {
   isLoggedIn?: boolean;
   rewardAmount?: number;
   partnerSettings?: Record<string, any>;
+  installsCount?: number;
+  completionsCount?: number;
   discountCode?: string;
   islanding?: boolean;
   onCtaClick?: () => void;
@@ -70,6 +72,8 @@ export function StorefrontHeader({
   isLoggedIn,
   rewardAmount,
   partnerSettings,
+  installsCount = 0,
+  completionsCount = 0,
   discountCode,
   islanding,
   onLogout,
@@ -129,22 +133,17 @@ export function StorefrontHeader({
                 : '')
             }
           >
-            <ProgressRewards
+            <StagedProgressBar
+              installsCount={installsCount}
+              completionsCount={completionsCount}
+              installThreshold={5}
+              installRewardPerGame={5}
+              downfunnelThreshold={3}
+              bundleAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount) || 175}
+              bundleCouponAmount={150}
               partnerName={partnerName}
-              milestones={isLoggedIn ? partnerSettings?.milestones : []}
-              rewardAmount={rewardAmount || 0}
-              discountAmount={Number(partnerSettings?.rewardGoal?.discount || 0)}
-              goalAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount || 0)}
-              code={isLoggedIn ? discountCode : ''}
-              onCopyWithRedirect={() => {
-                console.log('Copy with redirect');
-              }}
-              onClaimLater={() => {
-                console.log('Claim later');
-              }}
+              discountCode={isLoggedIn ? discountCode : ''}
               redirectUrl="/collections/all"
-              onClaimFirstMilestone={onClaimFirstMilestone}
-              onClaimLastMilestone={onClaimLastMilestone}
               onGenerateDiscountCode={onGenerateDiscountCode}
             />
           </div>
