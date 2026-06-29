@@ -240,7 +240,7 @@ export function RcartWidget({
   const notifyClaimInstallSentRef = useRef(false);
   const notifyClaimBundleSentRef = useRef(false);
 
-  const callDiscountApi = async (amount: 5 | 100): Promise<{ code: string; reused: boolean } | null> => {
+  const callDiscountApi = async (amount: 25 | 150): Promise<{ code: string; reused: boolean } | null> => {
     if (!apiUrl || !shop || !resolvedEmail) {
       if (debugMode) console.warn('[DEBUG][discount] skipped — missing:', { apiUrl: !!apiUrl, shop: !!shop, email: !!resolvedEmail });
       return null;
@@ -354,7 +354,7 @@ export function RcartWidget({
     const tier = earnedMilestoneTier(earned, partnerSettings?.rewardGoal ?? undefined);
     if (!tier) return null;
   
-    const discountAmount: 5 | 100 = tier === 'install' ? 5 : 100;
+    const discountAmount: 25 | 150 = tier === 'install' ? 25 : 150;
     const discount = await callDiscountApi(discountAmount);
     if (!discount) return null;
 
