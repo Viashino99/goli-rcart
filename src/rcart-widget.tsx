@@ -48,8 +48,8 @@ const WELCOME_NOTIFY_MILESTONE: NotifyMilestonePayload = {
   icon: 'welcome',
   label: 'Welcome',
   status: 'earned',
-  ctaText: "Unlock $160 now",
-  calloutText: "Unlock $160 now",
+  ctaText: "Unlock $175 now",
+  calloutText: "Unlock $175 now",
 };
 
 function isGamesHash(): boolean {
