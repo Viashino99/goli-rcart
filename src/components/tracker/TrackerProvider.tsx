@@ -91,10 +91,48 @@ const FacebookPixel = () => {
   return null;
 };
 
+// Microsoft Clarity — session replay / heatmaps. Scoped to the rewards page only:
+// the widget already only mounts where #rcart-widget-root exists, and this path guard
+// ensures Clarity never loads anywhere but goli.com/pages/160.
+const CLARITY_PROJECT_ID = "xgvtxezvuj";
+const CLARITY_PATH_PREFIX = "/pages/160";
+
+type ClarityQueue = { (...args: unknown[]): void; q?: unknown[] };
+
+const Clarity = () => {
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof document === "undefined") return;
+    if (!window.location.pathname.startsWith(CLARITY_PATH_PREFIX)) return;
+    // Idempotent — survives StrictMode double-mount / remounts.
+    if (document.querySelector("script[data-clarity-tag]")) return;
+
+    // Clarity's bootstrap queue: buffers calls until the async tag loads and replaces it.
+    const w = window as Window & { clarity?: ClarityQueue };
+    if (!w.clarity) {
+      const queued: unknown[] = [];
+      const fn = ((...args: unknown[]) => {
+        queued.push(args);
+      }) as ClarityQueue;
+      fn.q = queued;
+      w.clarity = fn;
+    }
+
+    const script = document.createElement("script");
+    script.async = true;
+    script.src = `https://www.clarity.ms/tag/${CLARITY_PROJECT_ID}`;
+    script.setAttribute("data-clarity-tag", "");
+    document.head.appendChild(script);
+    // Not removed on unmount — Clarity should persist for the whole session.
+  }, []);
+
+  return null;
+};
+
 const TrackerProvider = () => {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <FacebookPixel />
+      <Clarity />
     </Suspense>
   );
 };
