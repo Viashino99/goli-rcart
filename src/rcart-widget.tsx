@@ -515,6 +515,10 @@ export function RcartWidget({
               PixelToken={FB_ACCESS_TOKEN ?? ''}
               partnerCode={partnerCode}
               partnerName={storeName}
+              // Pin the headline so it stays decoupled from maxIncompleteOffers (the download-slot
+              // gate). Without this, the title auto-derives installGoal = maxIncompleteOffers ×
+              // installPoints, so raising the gate to 10 would misrender it as "$50, play and get $125".
+              title="Install and get $25, play and get $150 more"
               maxIncompleteOffers={partnerSettings?.maxIncompleteOffers || 5}
               bundleAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount) || 0}
               rewardAmount={Number(rewardAmount) || 0}
