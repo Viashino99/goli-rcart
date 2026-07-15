@@ -496,14 +496,14 @@ export function RcartWidget({
         onClaimFirstMilestone={handleFirstMilestoneClaim}
         onClaimLastMilestone={handleLastMilestoneClaim}
         islanding={showPage === 'landing' ? true : false}
-        ctaLabel={"Unlock " + "$"+ (loading ? 0 : partnerSettings?.rewardGoal?.thresholdAmount || 0) + " now"}
+        ctaLabel={"Unlock " + "$"+ (loading ? 175 : partnerSettings?.rewardGoal?.thresholdAmount || 175) + " now"}
       />
 
       {showPage === 'landing' ? (
         <>
           <SectionHero
             storeName={storeName}
-            bundleAmount={partnerSettings?.rewardGoal?.thresholdAmount ?? rewardAmount}
+            bundleAmount={partnerSettings?.rewardGoal?.thresholdAmount ?? 175}
             discountAmount={partnerSettings?.rewardGoal?.discount}
             onCTAClick={gotoGamesPage}
             to="#games"
