@@ -22,6 +22,6 @@
     "extensions/*"
   ],
   "dependencies": {
-    "getjacked-components": "^0.5.11"
+    "getjacked-components": "^0.5.15"
   }
 }
