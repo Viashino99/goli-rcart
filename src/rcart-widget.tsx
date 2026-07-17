@@ -520,7 +520,7 @@ export function RcartWidget({
         onClaimFirstMilestone={handleFirstMilestoneClaim}
         onClaimLastMilestone={handleLastMilestoneClaim}
         islanding={showPage === 'landing' ? true : false}
-        ctaLabel={"Unlock " + "$"+ (loading ? 0 : partnerSettings?.rewardGoal?.thresholdAmount || 0) + " now"}
+        ctaLabel={"Unlock " + "$"+ (loading ? 175 : partnerSettings?.rewardGoal?.thresholdAmount || 175) + " now"}
       />
 
       {/* Download-tracking banner — sits just under the header, self-hides until the user has ≥1 download. */}
@@ -539,7 +539,7 @@ export function RcartWidget({
         <>
           <SectionHero
             storeName={storeName}
-            bundleAmount={partnerSettings?.rewardGoal?.thresholdAmount ?? rewardAmount}
+            bundleAmount={partnerSettings?.rewardGoal?.thresholdAmount ?? 175}
             discountAmount={partnerSettings?.rewardGoal?.discount}
             onCTAClick={gotoGamesPage}
             to="#games"

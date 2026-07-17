@@ -15,9 +15,13 @@ api_version = "2026-07"
 topics = ["app/uninstalled"]
 uri = "/api/webhooks/app-uninstalled"
 
+[[webhooks.subscriptions]]
+topics = ["orders/paid"]
+uri = "/api/webhooks/orders-paid"
+
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "write_price_rules,write_discounts,read_discounts"
+scopes = "write_price_rules,write_discounts,read_discounts,read_orders"
 
 [auth]
 redirect_urls = [
