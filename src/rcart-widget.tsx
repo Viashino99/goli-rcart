@@ -7,7 +7,13 @@ import {
   SectionTestimonials,
   SectionFaq,
   useLogout,
-  SectionPartneredGames
+  SectionPartneredGames,
+  TrackingStatusBanner,
+  ModalTrackingNotice,
+  ModalGame,
+  buildGameModalQrUrl,
+  useSectionGamesProgress,
+  type RecommendableGame,
 } from 'getjacked-components';
 import { StorefrontHeader } from './components/storefront-header';
 import { useRcartGameApi } from './use-rcart-game-api';
@@ -155,10 +161,28 @@ export function RcartWidget({
   const [loginSignal, setLoginSignal] = useState(0);
 
   const { logout } = useLogout();
-  const { games, activities, partnerSettings, rewardAmount, loading, error, sessionUser, isNew, refetch } = useRcartGameApi({
+  const { games, activities, partnerSettings, rewardAmount, recommendedInstall, loading, error, sessionUser, isNew, refetch } = useRcartGameApi({
     partnerCode,
     email: resolvedEmail,
   });
+
+  // Recommendation install flow (from the TrackingStatusBanner's "try this game!"):
+  // ad-tracking notice → app info modal → app store (via ModalGame's own Install button).
+  const [installGame, setInstallGame] = useState<NonNullable<typeof games>[number] | null>(null);
+  const [installStage, setInstallStage] = useState<'att' | 'info' | null>(null);
+  // Reuse the offerwall's exact incomplete-offer gate so ModalGame shows the "reached the limit"
+  // card instead of a dead-end redirect when the user is at the cap.
+  const { isGameModalLimited } = useSectionGamesProgress(activities ?? [], partnerSettings, Number(rewardAmount) || 0);
+
+  const handleRecommendInstall = (rec: RecommendableGame) => {
+    setInstallGame((games ?? []).find((g: any) => g.offerId === rec.offerId) ?? null);
+    setInstallStage('att');
+  };
+  // Ad-tracking acknowledged → open the app info modal. The store opens from ModalGame's own Install
+  // button (built from selectedGame.clickUrl + partnerCode), so it fires the Lead beacon and respects
+  // the install-limit gate — never a blind window.open that bypasses both.
+  const continueFromAtt = () => setInstallStage('info');
+  const closeInstallFlow = () => setInstallStage(null);
 
   console.log("sessionUserteststst", sessionUser);
 
@@ -499,6 +523,18 @@ export function RcartWidget({
         ctaLabel={"Unlock " + "$"+ (loading ? 175 : partnerSettings?.rewardGoal?.thresholdAmount || 175) + " now"}
       />
 
+      {/* Download-tracking banner — sits just under the header, self-hides until the user has ≥1 download. */}
+      <div style={{ maxWidth: 560, margin: '0 auto', width: '100%', padding: '0 16px', boxSizing: 'border-box' }}>
+        <TrackingStatusBanner
+          activities={activities || []}
+          games={games || []}
+          recommendedGame={recommendedInstall ?? undefined}
+          onInstallGame={handleRecommendInstall}
+          onOpen={refetch}
+          partnerName={storeName}
+        />
+      </div>
+
       {showPage === 'landing' ? (
         <>
           <SectionHero
@@ -656,6 +692,27 @@ export function RcartWidget({
           </div>
         </>
       ) : null}
+
+      {/* Recommendation install flow: ad-tracking notice → app info modal (store opens from its Install button). */}
+      <ModalTrackingNotice
+        open={installStage === 'att'}
+        onContinue={continueFromAtt}
+        onClose={closeInstallFlow}
+      />
+      {installGame && (
+        <ModalGame
+          open={installStage === 'info'}
+          selectedGame={installGame}
+          qrLink={buildGameModalQrUrl(installGame.offerId)}
+          islimited={isGameModalLimited}
+          onOpenChange={(o: boolean) => { if (!o) closeInstallFlow(); }}
+          partnerCode={partnerCode}
+          partnerName={storeName}
+          partnerSettings={partnerSettings}
+          rewardAmount={Number(rewardAmount) || 0}
+          bundleAmount={Number(partnerSettings?.rewardGoal?.thresholdAmount) || 175}
+        />
+      )}
     </div>
   );
 }
